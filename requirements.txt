@@ -1,0 +1,19 @@
+# Dependencias core
+torch
+transformers
+Pillow
+
+# Vector DB
+faiss-cpu       # usar faiss-gpu si hay GPU disponible
+
+# Datos
+pandas
+numpy
+requests
+tqdm
+
+# Config
+python-dotenv
+
+# Demo
+gradio
