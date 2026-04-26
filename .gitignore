@@ -1,10 +1,9 @@
 # --- Proyecto: recomendador_peliculas ---
 # Datos pesados generados (no versionar)
 data/posters/
-data/processed/
 
-# Índice FAISS
-*.index
+# Datos crudos
+data/raw/
 
 # --- Python estándar ---
 # Byte-compiled / optimized / DLL files

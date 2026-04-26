@@ -5,6 +5,24 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from dotenv import load_dotenv
 load_dotenv()
 
+BUCKET     = "buckets/carbonecar/recomendador-peliculas-index"
+INDEX_PATH = "data/processed/faiss.index"
+META_PATH  = "data/processed/index_metadata.csv"
+
+
+def _download_index():
+    Path(INDEX_PATH).parent.mkdir(parents=True, exist_ok=True)
+    if not Path(INDEX_PATH).exists() or not Path(META_PATH).exists():
+        from huggingface_hub import HfFileSystem
+        fs = HfFileSystem()
+        if not Path(INDEX_PATH).exists():
+            fs.get(f"{BUCKET}/faiss.index", INDEX_PATH)
+        if not Path(META_PATH).exists():
+            fs.get(f"{BUCKET}/index_metadata.csv", META_PATH)
+
+
+_download_index()
+
 import gradio as gr
 from src.recommender import MovieRecommender
 
