@@ -17,22 +17,28 @@ class CLIPEncoder:
         self.processor = CLIPProcessor.from_pretrained(model_id)
         self.model.eval()
 
+    def _image_features(self, pixel_values) -> torch.Tensor:
+        out = self.model.vision_model(pixel_values=pixel_values)
+        feats = self.model.visual_projection(out.pooler_output)
+        return feats / feats.norm(dim=-1, keepdim=True)
+
+    def _text_features(self, inputs) -> torch.Tensor:
+        out = self.model.text_model(**inputs)
+        feats = self.model.text_projection(out.pooler_output)
+        return feats / feats.norm(dim=-1, keepdim=True)
+
     @torch.no_grad()
     def encode_image(self, image_path: Union[str, Path]) -> np.ndarray:
         image = Image.open(image_path).convert("RGB")
         inputs = self.processor(images=image, return_tensors="pt").to(self.device)
-        features = self.model.get_image_features(**inputs)
-        features = features / features.norm(dim=-1, keepdim=True)
-        return features.cpu().numpy()[0]
+        return self._image_features(inputs["pixel_values"]).cpu().numpy()[0]
 
     @torch.no_grad()
     def encode_text(self, text: str) -> np.ndarray:
         inputs = self.processor(
             text=[text], return_tensors="pt", truncation=True, max_length=77
         ).to(self.device)
-        features = self.model.get_text_features(**inputs)
-        features = features / features.norm(dim=-1, keepdim=True)
-        return features.cpu().numpy()[0]
+        return self._text_features(inputs).cpu().numpy()[0]
 
     @torch.no_grad()
     def encode_images_batch(
@@ -45,7 +51,5 @@ class CLIPEncoder:
             inputs = self.processor(images=images, return_tensors="pt", padding=True).to(
                 self.device
             )
-            features = self.model.get_image_features(**inputs)
-            features = features / features.norm(dim=-1, keepdim=True)
-            all_features.append(features.cpu().numpy())
+            all_features.append(self._image_features(inputs["pixel_values"]).cpu().numpy())
         return np.vstack(all_features)

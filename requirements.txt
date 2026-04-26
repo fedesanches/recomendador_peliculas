@@ -17,3 +17,6 @@ python-dotenv
 
 # Demo
 gradio
+
+# HuggingFace
+huggingface_hub

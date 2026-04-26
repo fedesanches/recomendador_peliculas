@@ -1,21 +1,54 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from dotenv import load_dotenv
+load_dotenv()
+
+BUCKET     = "buckets/carbonecar/recomendador-peliculas-index"
+INDEX_PATH = "data/processed/faiss.index"
+META_PATH  = "data/processed/index_metadata.csv"
+
+
+def _download_index():
+    Path(INDEX_PATH).parent.mkdir(parents=True, exist_ok=True)
+    if not Path(INDEX_PATH).exists() or not Path(META_PATH).exists():
+        from huggingface_hub import HfFileSystem
+        fs = HfFileSystem()
+        if not Path(INDEX_PATH).exists():
+            fs.get(f"{BUCKET}/faiss.index", INDEX_PATH)
+        if not Path(META_PATH).exists():
+            fs.get(f"{BUCKET}/index_metadata.csv", META_PATH)
+
+
+_download_index()
+
 import gradio as gr
 from src.recommender import MovieRecommender
 
 recommender = MovieRecommender()
 
 
-def recommend(image_path: str, top_k: int) -> str:
+def recommend(image_path: str, top_k: int):
     if image_path is None:
-        return "Por favor, sube una imagen de portada."
+        return [], "Por favor, sube una imagen de portada."
+
     results = recommender.recommend_from_image(image_path, top_k=int(top_k))
-    output = ""
+
+    images = []
+    text = ""
     for _, row in results.iterrows():
-        output += f"### {row['title']}  ·  score: {row['score']:.3f}\n"
+        url = row.get("tmdb_poster_url", "")
+        if url:
+            images.append((url, row["title"]))
+
+        text += f"### {row['title']}  ·  score: {row['score']:.3f}\n"
         overview = row.get("overview", "")
         if overview:
-            output += f"{overview}\n"
-        output += "\n---\n"
-    return output
+            text += f"{overview}\n"
+        text += "\n---\n"
+
+    return images, text
 
 
 with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
@@ -29,12 +62,13 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
         top_k_slider = gr.Slider(1, 20, value=5, step=1, label="Recomendaciones")
 
     recommend_btn = gr.Button("Buscar similares", variant="primary")
+    gallery = gr.Gallery(label="Películas recomendadas", columns=5, height="auto")
     output = gr.Markdown()
 
     recommend_btn.click(
         fn=recommend,
         inputs=[image_input, top_k_slider],
-        outputs=output,
+        outputs=[gallery, output],
     )
 
 if __name__ == "__main__":

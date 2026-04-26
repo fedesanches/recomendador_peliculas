@@ -1,3 +1,13 @@
+---
+title: Recomendador de Películas por Portada
+emoji: 🎬
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+app_file: app.py
+pinned: false
+---
+
 # Recomendador de Películas por Portada
 
 Dado la portada de una película, encuentra las **K películas más similares** usando embeddings de CLIP y búsqueda por similitud coseno en FAISS.
