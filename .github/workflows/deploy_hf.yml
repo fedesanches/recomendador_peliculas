@@ -23,4 +23,4 @@ jobs:
         run: |
           git config user.email "carbonecar@gmail.com"
           git config user.name "carbonecar"
-          git push https://carbonecar:$HF_TOKEN@huggingface.co/spaces/carbonecar/recomendador-peliculas main
+          git push https://carbonecar:$HF_TOKEN@huggingface.co/spaces/carbonecar/recomendador-peliculas HEAD:main
