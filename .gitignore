@@ -1,6 +1,7 @@
 # --- Proyecto: recomendador_peliculas ---
 # Datos pesados generados (no versionar)
 data/posters/
+data/processed/
 
 # Datos crudos
 data/raw/
@@ -224,3 +225,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Otros
+proyecto_recomendador_peliculas.txt
+
+# Documentación local (no versionar)
+CLAUDE.md
+descripcion_funcional.md
+descripcion_tecnica.md
