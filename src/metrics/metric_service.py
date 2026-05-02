@@ -1,0 +1,99 @@
+import numpy as np
+import pandas as pd
+import faiss
+from sklearn.preprocessing import MultiLabelBinarizer
+from dataclasses import dataclass
+
+INDEX_PATH      = "data/processed/faiss.index"
+INDEX_META_PATH = "data/processed/index_metadata.csv"
+
+
+@dataclass
+class MetricResult:
+    precision:        float
+    recall:           float
+    ndcg:             float
+    gender_coherence: float
+    aciertos:         int
+    aciertos_pct:     float
+
+
+def _jaccard(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    intersection = np.logical_and(y_true, y_pred).sum()
+    union        = np.logical_or(y_true, y_pred).sum()
+    return float(intersection / union) if union > 0 else 0.0
+
+
+def _jaccard_all(y_true: np.ndarray, generos_binarios: np.ndarray) -> np.ndarray:
+    intersection = np.logical_and(y_true, generos_binarios).sum(axis=1)
+    union        = np.logical_or(y_true, generos_binarios).sum(axis=1)
+    return np.where(union > 0, intersection / union, 0.0)
+
+
+def _dcg(relevances) -> float:
+    return sum(r / np.log2(i + 2) for i, r in enumerate(relevances))
+
+
+def calculate(
+    k:              int   = 5,
+    n_samples:      int   = 500,
+    umbral_jaccard: float = 0.5,
+) -> MetricResult:
+    index    = faiss.read_index(INDEX_PATH)
+    metadata = pd.read_csv(INDEX_META_PATH)
+
+    metadata["genre_list"] = metadata["genres"].fillna("").apply(
+        lambda x: [g.strip().lower() for g in x.split(", ")] if x else []
+    )
+    mlb              = MultiLabelBinarizer()
+    generos_binarios = mlb.fit_transform(metadata["genre_list"])
+
+    sample = metadata.sample(n_samples, random_state=42)
+
+    precision_scores  = []
+    recall_scores     = []
+    ndcg_scores       = []
+    coherence_scores  = []
+    aciertos          = 0
+
+    for idx, _ in sample.iterrows():
+        vector   = index.reconstruct(idx)
+        _, indices = index.search(vector.reshape(1, -1), k + 1)
+        indices_recomendados = indices[0][1:]
+
+        y_true = generos_binarios[idx]
+        y_preds = generos_binarios[indices_recomendados]
+        jaccards = np.array([_jaccard(y_true, yp) for yp in y_preds])
+
+        # Precision@K: fracción de las K recomendaciones que superan el umbral
+        relevantes  = int((jaccards >= umbral_jaccard).sum())
+        aciertos   += relevantes
+        precision_scores.append(relevantes / k)
+
+        # Recall@K: fracción de todas las películas relevantes del dataset que recuperamos
+        todos_jaccards   = _jaccard_all(y_true, generos_binarios)
+        total_relevantes = max((todos_jaccards >= umbral_jaccard).sum() - 1, 1)  # -1 excluye la misma
+        recall_scores.append(min(relevantes / total_relevantes, 1.0))
+
+        # NDCG@K: ranking ponderado por posición usando Jaccard como relevancia
+        dcg   = _dcg(jaccards)
+        ideal = sorted(todos_jaccards, reverse=True)[1:k + 1]
+        idcg  = _dcg(ideal)
+        ndcg_scores.append(dcg / idcg if idcg > 0 else 0.0)
+
+        # Coherencia de género: Jaccard promedio de las K recomendaciones
+        coherence_scores.append(float(jaccards.mean()))
+
+    total = n_samples * k
+    return MetricResult(
+        precision=        round(float(np.mean(precision_scores)),  4),
+        recall=           round(float(np.mean(recall_scores)),     4),
+        ndcg=             round(float(np.mean(ndcg_scores)),       4),
+        gender_coherence= round(float(np.mean(coherence_scores)),  4),
+        aciertos=         aciertos,
+        aciertos_pct=     round(aciertos / total, 4),
+    )
+
+
+if __name__ == "__main__":
+    print(calculate())

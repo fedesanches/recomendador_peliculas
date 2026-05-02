@@ -23,10 +23,70 @@ def _download_index():
 
 _download_index()
 
+import base64
 import gradio as gr
 from src.recommender import MovieRecommender
+from src.metrics.metric_service import calculate, MetricResult
+
+def _img_to_base64(path: str) -> str:
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+_DCG_IMG = f"data:image/png;base64,{_img_to_base64('DCG.png')}"
 
 recommender = MovieRecommender()
+metrics: MetricResult = calculate()
+
+
+METRIC_DEFINITIONS = {
+    "Precision@K":         "De las K películas recomendadas, fracción que supera el umbral de similitud de género (Jaccard).",
+    "Recall@K":            "De todas las películas del dataset con similitud de género >= umbral, fracción que aparece en las K recomendaciones.",
+    "NDCG@K":              f"Normalized Discounted Cumulative Gain: mide la calidad del ranking. Una recomendación relevante en posición 1 vale más que en posición K.<br><img src='{_DCG_IMG}' style='width:240px;margin-top:8px'>",
+    "Coherencia de género": "Jaccard promedio entre los géneros de la película consultada y los de cada recomendación.",
+    "Aciertos":            "Total de recomendaciones individuales que superan el umbral Jaccard, sobre el total de recomendaciones (muestras × K).",
+}
+
+
+def format_metrics(m: MetricResult) -> str:
+    rows_data = [
+        ("Precision@K",          f"{m.precision:.4f}"),
+        ("Recall@K",             f"{m.recall:.4f}"),
+        ("NDCG@K",               f"{m.ndcg:.4f}"),
+        ("Coherencia de género", f"{m.gender_coherence:.4f}"),
+        ("Aciertos",             f"{m.aciertos} ({m.aciertos_pct:.2%})"),
+    ]
+    rows_html = ""
+    for name, value in rows_data:
+        definition = METRIC_DEFINITIONS[name]
+        rows_html += f"""
+        <tr>
+            <td style="padding:6px 12px;display:flex;justify-content:space-between;align-items:center">
+                <span>{name}</span>
+                <span style="position:relative;display:inline-block;cursor:pointer;margin-left:8px">
+                    <span style="color:#888;font-size:13px">ℹ</span>
+                    <span style="visibility:hidden;width:280px;background:#333;color:#fff;font-size:12px;
+                                 border-radius:6px;padding:6px 10px;position:absolute;z-index:10;
+                                 bottom:125%;right:0;
+                                 opacity:0;transition:opacity 0.2s"
+                          class="tip">{definition}</span>
+                </span>
+            </td>
+            <td style="padding:6px 12px;font-weight:bold">{value}</td>
+        </tr>"""
+
+    return f"""
+    <style>
+        span:hover > .tip {{ visibility:visible !important; opacity:1 !important; }}
+    </style>
+    <table style="border-collapse:collapse;width:100%">
+        <thead>
+            <tr style="border-bottom:1px solid #ddd">
+                <th style="padding:6px 12px;text-align:left">Métrica</th>
+                <th style="padding:6px 12px;text-align:left">Valor</th>
+            </tr>
+        </thead>
+        <tbody>{rows_html}</tbody>
+    </table>"""
 
 
 def recommend(image_path: str, top_k: int):
@@ -59,7 +119,11 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
 
     with gr.Row():
         image_input = gr.Image(type="filepath", label="Portada de consulta")
-        top_k_slider = gr.Slider(1, 20, value=5, step=1, label="Recomendaciones")
+        with gr.Column():
+            top_k_slider = gr.Slider(1, 20, value=5, step=1, label="Recomendaciones")
+            with gr.Accordion("Métricas del modelo", open=False):
+                gr.Markdown("Evaluación sobre 500 muestras aleatorias con umbral Jaccard = 0.5")
+                metrics_display = gr.HTML(format_metrics(metrics))
 
     recommend_btn = gr.Button("Buscar similares", variant="primary")
     gallery = gr.Gallery(label="Películas recomendadas", columns=5, height="auto")
