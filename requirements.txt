@@ -11,7 +11,7 @@ pandas
 numpy
 requests
 tqdm
-
+scikit-learn
 # Config
 python-dotenv
 
