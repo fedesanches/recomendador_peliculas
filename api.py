@@ -1,5 +1,6 @@
-import io
+import json
 import tempfile
+from dataclasses import asdict
 from pathlib import Path
 from typing import List
 
@@ -8,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.recommender import MovieRecommender
+
+METRICS_PATH = Path("data/processed/metrics.json")
 
 app = FastAPI(title="Recomendador de Películas", version="1.0")
 
@@ -36,6 +39,13 @@ class RecommendResponse(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/metrics")
+def get_metrics():
+    if not METRICS_PATH.exists():
+        raise HTTPException(status_code=404, detail="Métricas no disponibles. Ejecutar src/metrics/metric_service.py primero.")
+    return json.loads(METRICS_PATH.read_text())
 
 
 @app.post("/recommend/image", response_model=RecommendResponse)

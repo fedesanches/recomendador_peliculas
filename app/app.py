@@ -8,12 +8,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+from logging import getLogger
 load_dotenv()
 
 BUCKET     = "buckets/carbonecar/recomendador-peliculas-index"
 INDEX_PATH = "data/processed/faiss.index"
 META_PATH  = "data/processed/index_metadata.csv"
 
+logger = getLogger(__name__)
 
 def _download_index():
     Path(INDEX_PATH).parent.mkdir(parents=True, exist_ok=True)
@@ -33,7 +35,9 @@ import base64
 import requests as http_requests
 import pandas as pd
 import gradio as gr
-from src.metrics.metric_service import MetricResult
+from src.metrics.metric_service import MetricResult, calculate_and_save
+
+
 
 RECOMMENDER_MODE    = os.getenv("RECOMMENDER_MODE", "embedded")
 RECOMMENDER_API_URL = os.getenv("RECOMMENDER_API_URL", "http://localhost:8000")
@@ -73,10 +77,19 @@ import json
 _METRICS_PATH = Path("data/processed/metrics.json")
 
 def _load_metrics() -> MetricResult | None:
+    if RECOMMENDER_MODE == "api":
+        try:
+            response = http_requests.get(f"{RECOMMENDER_API_URL}/metrics", timeout=10)
+            response.raise_for_status()
+            return MetricResult(**response.json())
+        except Exception as e:
+            logger.error(f"Error al obtener métricas desde API: {e}")
+            return None
     if not _METRICS_PATH.exists():
+        calculate_and_save()
+        logger.warning(f"Métricas precomputadas no encontradas en {_METRICS_PATH}. Se mostrarán métricas vacías.")
         return None
-    data = json.loads(_METRICS_PATH.read_text())
-    return MetricResult(**data)
+    return MetricResult(**json.loads(_METRICS_PATH.read_text()))
 
 metrics = _load_metrics()
 

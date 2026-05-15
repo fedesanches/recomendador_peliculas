@@ -27,7 +27,8 @@ def _jaccard(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 def _jaccard_all(y_true: np.ndarray, generos_binarios: np.ndarray) -> np.ndarray:
     intersection = np.logical_and(y_true, generos_binarios).sum(axis=1)
     union        = np.logical_or(y_true, generos_binarios).sum(axis=1)
-    return np.where(union > 0, intersection / union, 0.0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(union > 0, intersection / union, 0.0)
 
 
 def _dcg(relevances) -> float:
@@ -102,7 +103,10 @@ def save(result: MetricResult, path: str = "data/processed/metrics.json") -> Non
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(asdict(result), indent=2))
 
-
+def calculate_and_save():
+    result = calculate()
+    save(result)
+    
 if __name__ == "__main__":
     result = calculate()
     print(result)
