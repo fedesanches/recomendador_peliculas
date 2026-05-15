@@ -14,18 +14,26 @@ load_dotenv()
 BUCKET     = "buckets/carbonecar/recomendador-peliculas-index"
 INDEX_PATH = "data/processed/faiss.index"
 META_PATH  = "data/processed/index_metadata.csv"
+COMBINED_INDEX_PATH = "data/processed/faiss_combined.index"
+COMBINED_META_PATH  = "data/processed/index_metadata_combined.csv"
 
 logger = getLogger(__name__)
 
 def _download_index():
     Path(INDEX_PATH).parent.mkdir(parents=True, exist_ok=True)
-    if not Path(INDEX_PATH).exists() or not Path(META_PATH).exists():
+    if not Path(INDEX_PATH).exists() or not Path(META_PATH).exists() \
+        or not Path(COMBINED_INDEX_PATH).exists() or not Path(COMBINED_META_PATH).exists():
         from huggingface_hub import HfFileSystem
         fs = HfFileSystem()
         if not Path(INDEX_PATH).exists():
             fs.get(f"{BUCKET}/faiss.index", INDEX_PATH)
         if not Path(META_PATH).exists():
             fs.get(f"{BUCKET}/index_metadata.csv", META_PATH)
+
+        if not Path(COMBINED_INDEX_PATH).exists():
+            fs.get(f"{BUCKET}/faiss_combined.index", COMBINED_INDEX_PATH)
+        if not Path(COMBINED_META_PATH).exists():
+            fs.get(f"{BUCKET}/index_metadata_combined.csv", COMBINED_META_PATH)
 
 
 _download_index()
@@ -35,8 +43,7 @@ import base64
 import requests as http_requests
 import pandas as pd
 import gradio as gr
-from src.metrics.metric_service import MetricResult, calculate_and_save
-
+from src.metrics.metric_service import MetricResult
 
 
 RECOMMENDER_MODE    = os.getenv("RECOMMENDER_MODE", "embedded")
@@ -46,24 +53,24 @@ if RECOMMENDER_MODE == "embedded":
     from src.recommender import MovieRecommender
     _recommender = MovieRecommender()
 
-def _recommend_embedded(image_path: str, top_k: int) -> pd.DataFrame:
-    return _recommender.recommend_from_image(image_path, top_k=top_k)
+def _recommend_embedded(image_path: str, top_k: int, combined: bool) -> pd.DataFrame:
+    return _recommender.recommend_from_image(image_path, top_k=top_k, combined=combined)
 
-def _recommend_api(image_path: str, top_k: int) -> pd.DataFrame:
+def _recommend_api(image_path: str, top_k: int, combined: bool) -> pd.DataFrame:
     with open(image_path, "rb") as f:
         response = http_requests.post(
             f"{RECOMMENDER_API_URL}/recommend/image",
             files={"file": f},
-            params={"top_k": top_k},
+            params={"top_k": top_k, "combined": combined},
             timeout=30,
         )
     response.raise_for_status()
     return pd.DataFrame(response.json()["results"])
 
-def _recommend(image_path: str, top_k: int) -> pd.DataFrame:
+def _recommend(image_path: str, top_k: int, combined: bool) -> pd.DataFrame:
     if RECOMMENDER_MODE == "api":
-        return _recommend_api(image_path, top_k)
-    return _recommend_embedded(image_path, top_k)
+        return _recommend_api(image_path, top_k, combined)
+    return _recommend_embedded(image_path, top_k, combined)
 
 
 def _img_to_base64(path: str) -> str:
@@ -74,24 +81,26 @@ _DCG_IMG = f"data:image/png;base64,{_img_to_base64('DCG.png')}"
 
 import json
 
-_METRICS_PATH = Path("data/processed/metrics.json")
+_METRICS_PATH          = Path("data/processed/metrics.json")
+_METRICS_COMBINED_PATH = Path("data/processed/metrics_combined.json")
 
-def _load_metrics() -> MetricResult | None:
+def _load_metrics(combined: bool = False) -> MetricResult | None:
     if RECOMMENDER_MODE == "api":
+        endpoint = f"{RECOMMENDER_API_URL}/metrics{'/combined' if combined else ''}"
         try:
-            response = http_requests.get(f"{RECOMMENDER_API_URL}/metrics", timeout=10)
+            response = http_requests.get(endpoint, timeout=10)
             response.raise_for_status()
             return MetricResult(**response.json())
         except Exception as e:
             logger.error(f"Error al obtener métricas desde API: {e}")
             return None
-    if not _METRICS_PATH.exists():
-        calculate_and_save()
-        logger.warning(f"Métricas precomputadas no encontradas en {_METRICS_PATH}. Se mostrarán métricas vacías.")
+    path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
+    if not path.exists():
         return None
-    return MetricResult(**json.loads(_METRICS_PATH.read_text()))
+    return MetricResult(**json.loads(path.read_text()))
 
-metrics = _load_metrics()
+metrics          = _load_metrics(combined=False)
+metrics_combined = _load_metrics(combined=True)
 
 
 METRIC_DEFINITIONS = {
@@ -148,11 +157,12 @@ def format_metrics(m: MetricResult | None) -> str:
     </table>"""
 
 
-def recommend(image_path: str, top_k: int):
+def recommend(image_path: str, top_k: int, index_mode: str):
     if image_path is None:
         return [], "Por favor, sube una imagen de portada."
 
-    results = _recommend(image_path, top_k=int(top_k))
+    combined = index_mode == "Imagen + Texto"
+    results = _recommend(image_path, top_k=int(top_k), combined=combined)
 
     images = []
     text = ""
@@ -180,9 +190,18 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
         image_input = gr.Image(type="filepath", label="Portada de consulta")
         with gr.Column():
             top_k_slider = gr.Slider(1, 20, value=5, step=1, label="Recomendaciones")
+            index_radio = gr.Radio(
+                choices=["Solo imagen", "Imagen + Texto"],
+                value="Solo imagen",
+                label="Índice de búsqueda",
+            )
             with gr.Accordion("Métricas del modelo", open=False):
                 gr.Markdown("Evaluación sobre 500 muestras aleatorias con umbral Jaccard = 0.5")
-                metrics_display = gr.HTML(format_metrics(metrics))
+                with gr.Tabs():
+                    with gr.Tab("Solo imagen (CLIP)"):
+                        gr.HTML(format_metrics(metrics))
+                    with gr.Tab("Imagen + Texto (CLIP combinado)"):
+                        gr.HTML(format_metrics(metrics_combined))
 
     recommend_btn = gr.Button("Buscar similares", variant="primary")
     gallery = gr.Gallery(label="Películas recomendadas", columns=5, height="auto")
@@ -190,7 +209,7 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
 
     recommend_btn.click(
         fn=recommend,
-        inputs=[image_input, top_k_slider],
+        inputs=[image_input, top_k_slider, index_radio],
         outputs=[gallery, output],
     )
 

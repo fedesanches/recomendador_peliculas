@@ -10,7 +10,8 @@ from pydantic import BaseModel
 
 from src.recommender import MovieRecommender
 
-METRICS_PATH = Path("data/processed/metrics.json")
+METRICS_PATH          = Path("data/processed/metrics.json")
+METRICS_COMBINED_PATH = Path("data/processed/metrics_combined.json")
 
 app = FastAPI(title="Recomendador de Películas", version="1.0")
 
@@ -48,8 +49,15 @@ def get_metrics():
     return json.loads(METRICS_PATH.read_text())
 
 
+@app.get("/metrics/combined")
+def get_metrics_combined():
+    if not METRICS_COMBINED_PATH.exists():
+        raise HTTPException(status_code=404, detail="Métricas combinadas no disponibles. Ejecutar src/metrics/metric_service.py --combined primero.")
+    return json.loads(METRICS_COMBINED_PATH.read_text())
+
+
 @app.post("/recommend/image", response_model=RecommendResponse)
-async def recommend_by_image(file: UploadFile = File(...), top_k: int = 5):
+async def recommend_by_image(file: UploadFile = File(...), top_k: int = 5, combined: bool = False):
     valid_extensions = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"}
     if Path(file.filename or "").suffix.lower() not in valid_extensions:
         raise HTTPException(status_code=400, detail="El archivo debe ser una imagen.")
@@ -59,14 +67,14 @@ async def recommend_by_image(file: UploadFile = File(...), top_k: int = 5):
         tmp.write(contents)
         tmp_path = tmp.name
 
-    results = recommender.recommend_from_image(tmp_path, top_k=top_k)
+    results = recommender.recommend_from_image(tmp_path, top_k=top_k, combined=combined)
     Path(tmp_path).unlink(missing_ok=True)
     return _to_response(results)
 
 
 @app.post("/recommend/text", response_model=RecommendResponse)
-def recommend_by_text(query: str, top_k: int = 5):
-    results = recommender.recommend_from_text(query, top_k=top_k)
+def recommend_by_text(query: str, top_k: int = 5, combined: bool = False):
+    results = recommender.recommend_from_text(query, top_k=top_k, combined=combined)
     return _to_response(results)
 
 
