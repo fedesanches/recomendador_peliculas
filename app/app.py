@@ -1,3 +1,8 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]    = "TRUE"
+os.environ["OMP_NUM_THREADS"]          = "1"
+os.environ["TOKENIZERS_PARALLELISM"]   = "false"
+
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -23,10 +28,39 @@ def _download_index():
 
 _download_index()
 
+import os
 import base64
+import requests as http_requests
+import pandas as pd
 import gradio as gr
-from src.recommender import MovieRecommender
-from src.metrics.metric_service import calculate, MetricResult
+from src.metrics.metric_service import MetricResult
+
+RECOMMENDER_MODE    = os.getenv("RECOMMENDER_MODE", "embedded")
+RECOMMENDER_API_URL = os.getenv("RECOMMENDER_API_URL", "http://localhost:8000")
+
+if RECOMMENDER_MODE == "embedded":
+    from src.recommender import MovieRecommender
+    _recommender = MovieRecommender()
+
+def _recommend_embedded(image_path: str, top_k: int) -> pd.DataFrame:
+    return _recommender.recommend_from_image(image_path, top_k=top_k)
+
+def _recommend_api(image_path: str, top_k: int) -> pd.DataFrame:
+    with open(image_path, "rb") as f:
+        response = http_requests.post(
+            f"{RECOMMENDER_API_URL}/recommend/image",
+            files={"file": f},
+            params={"top_k": top_k},
+            timeout=30,
+        )
+    response.raise_for_status()
+    return pd.DataFrame(response.json()["results"])
+
+def _recommend(image_path: str, top_k: int) -> pd.DataFrame:
+    if RECOMMENDER_MODE == "api":
+        return _recommend_api(image_path, top_k)
+    return _recommend_embedded(image_path, top_k)
+
 
 def _img_to_base64(path: str) -> str:
     with open(path, "rb") as f:
@@ -34,8 +68,17 @@ def _img_to_base64(path: str) -> str:
 
 _DCG_IMG = f"data:image/png;base64,{_img_to_base64('DCG.png')}"
 
-recommender = MovieRecommender()
-metrics: MetricResult = calculate()
+import json
+
+_METRICS_PATH = Path("data/processed/metrics.json")
+
+def _load_metrics() -> MetricResult | None:
+    if not _METRICS_PATH.exists():
+        return None
+    data = json.loads(_METRICS_PATH.read_text())
+    return MetricResult(**data)
+
+metrics = _load_metrics()
 
 
 METRIC_DEFINITIONS = {
@@ -47,14 +90,17 @@ METRIC_DEFINITIONS = {
 }
 
 
-def format_metrics(m: MetricResult) -> str:
-    rows_data = [
-        ("Precision@K",          f"{m.precision:.4f}"),
-        ("Recall@K",             f"{m.recall:.4f}"),
-        ("NDCG@K",               f"{m.ndcg:.4f}"),
-        ("Coherencia de género", f"{m.gender_coherence:.4f}"),
-        ("Aciertos",             f"{m.aciertos} ({m.aciertos_pct:.2%})"),
-    ]
+def format_metrics(m: MetricResult | None) -> str:
+    if m is None:
+        rows_data = [(k, "—") for k in METRIC_DEFINITIONS]
+    else:
+        rows_data = [
+            ("Precision@K",          f"{m.precision:.4f}"),
+            ("Recall@K",             f"{m.recall:.4f}"),
+            ("NDCG@K",               f"{m.ndcg:.4f}"),
+            ("Coherencia de género", f"{m.gender_coherence:.4f}"),
+            ("Aciertos",             f"{m.aciertos} ({m.aciertos_pct:.2%})"),
+        ]
     rows_html = ""
     for name, value in rows_data:
         definition = METRIC_DEFINITIONS[name]
@@ -93,7 +139,7 @@ def recommend(image_path: str, top_k: int):
     if image_path is None:
         return [], "Por favor, sube una imagen de portada."
 
-    results = recommender.recommend_from_image(image_path, top_k=int(top_k))
+    results = _recommend(image_path, top_k=int(top_k))
 
     images = []
     text = ""
@@ -136,4 +182,6 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch()
+    import torch
+    torch.set_num_threads(1)
+    demo.launch(max_threads=1)

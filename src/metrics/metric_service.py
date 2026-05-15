@@ -95,5 +95,15 @@ def calculate(
     )
 
 
+def save(result: MetricResult, path: str = "data/processed/metrics.json") -> None:
+    import json
+    from dataclasses import asdict
+    from pathlib import Path
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(asdict(result), indent=2))
+
+
 if __name__ == "__main__":
-    print(calculate())
+    result = calculate()
+    print(result)
+    save(result)
