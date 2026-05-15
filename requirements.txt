@@ -18,5 +18,10 @@ python-dotenv
 # Demo
 gradio
 
+# API
+fastapi
+uvicorn
+python-multipart
+
 # HuggingFace
 huggingface_hub
