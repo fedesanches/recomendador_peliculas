@@ -4,8 +4,10 @@ import faiss
 from sklearn.preprocessing import MultiLabelBinarizer
 from dataclasses import dataclass
 
-INDEX_PATH      = "data/processed/faiss.index"
-INDEX_META_PATH = "data/processed/index_metadata.csv"
+INDEX_PATH          = "data/processed/faiss.index"
+INDEX_META_PATH     = "data/processed/index_metadata.csv"
+INDEX_COMBINED_PATH      = "data/processed/faiss_combined.index"
+INDEX_COMBINED_META_PATH = "data/processed/index_metadata_combined.csv"
 
 
 @dataclass
@@ -39,9 +41,12 @@ def calculate(
     k:              int   = 5,
     n_samples:      int   = 500,
     umbral_jaccard: float = 0.5,
+    combined:       bool  = False,
 ) -> MetricResult:
-    index    = faiss.read_index(INDEX_PATH)
-    metadata = pd.read_csv(INDEX_META_PATH)
+    index_path = INDEX_COMBINED_PATH if combined else INDEX_PATH
+    meta_path  = INDEX_COMBINED_META_PATH if combined else INDEX_META_PATH
+    index    = faiss.read_index(index_path)
+    metadata = pd.read_csv(meta_path)
 
     metadata["genre_list"] = metadata["genres"].fillna("").apply(
         lambda x: [g.strip().lower() for g in x.split(", ")] if x else []
@@ -103,11 +108,15 @@ def save(result: MetricResult, path: str = "data/processed/metrics.json") -> Non
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(asdict(result), indent=2))
 
-def calculate_and_save():
-    result = calculate()
-    save(result)
-    
+def calculate_and_save(combined: bool = False):
+    result = calculate(combined=combined)
+    path   = "data/processed/metrics_combined.json" if combined else "data/processed/metrics.json"
+    save(result, path)
+
 if __name__ == "__main__":
-    result = calculate()
-    print(result)
-    save(result)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--combined", action="store_true", help="Usar índice imagen+texto")
+    args = parser.parse_args()
+    calculate_and_save(combined=args.combined)
+    print(calculate(combined=args.combined))
