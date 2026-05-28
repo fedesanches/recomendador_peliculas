@@ -81,8 +81,8 @@ _DCG_IMG = f"data:image/png;base64,{_img_to_base64('DCG.png')}"
 
 import json
 
-_METRICS_PATH          = Path("data/processed/metrics.json")
-_METRICS_COMBINED_PATH = Path("data/processed/metrics_combined.json")
+_METRICS_PATH          = Path("data/metrics/metrics_clips.json")
+_METRICS_COMBINED_PATH = Path("data/metrics/metrics_clips_combined.json")
 
 def _load_metrics(combined: bool = False) -> MetricResult | None:
     if RECOMMENDER_MODE == "api":
