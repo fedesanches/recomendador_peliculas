@@ -1,0 +1,8 @@
+{
+  "precision": 0.3412,
+  "recall": 0.0003,
+  "ndcg": 0.3346,
+  "gender_coherence": 0.3281,
+  "aciertos": 853,
+  "aciertos_pct": 0.3412
+}
