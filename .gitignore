@@ -5,6 +5,7 @@ data/processed/
 
 # Datos crudos
 data/raw/
+data/processed
 
 # --- Python estándar ---
 # Byte-compiled / optimized / DLL files
@@ -225,6 +226,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+.DS_Store
 
 # Otros
 proyecto_recomendador_peliculas.txt
