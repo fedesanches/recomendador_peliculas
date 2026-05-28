@@ -35,6 +35,9 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Archivos de presentación de avance
+presentacion_avance_vision*
+
 # PyInstaller
 #   Usually these files are written by a python script from a template
 #   before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -228,8 +231,13 @@ __marimo__/
 
 # Otros
 proyecto_recomendador_peliculas.txt
+scripts/export_project_md.py
+project_export.md
 
 # Documentación local (no versionar)
 CLAUDE.md
 descripcion_funcional.md
 descripcion_tecnica.md
+presentacion_avances_vision.pptx.pdf
+plan_siglip_offline.md
+plan_siglip_online.md
