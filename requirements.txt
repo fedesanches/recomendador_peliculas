@@ -1,5 +1,6 @@
 # Dependencias core
 torch
+torchvision
 transformers
 Pillow
 
@@ -12,6 +13,8 @@ numpy
 requests
 tqdm
 scikit-learn
+sentencepiece
+protobuf
 # Config
 python-dotenv
 

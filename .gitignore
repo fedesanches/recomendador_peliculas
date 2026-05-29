@@ -1,6 +1,7 @@
 # --- Proyecto: recomendador_peliculas ---
 # Datos pesados generados (no versionar)
 data/posters/
+data/processed/
 
 # Datos crudos
 data/raw/
@@ -34,6 +35,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Archivos de presentación de avance
+presentacion_avance_vision*
 
 # PyInstaller
 #   Usually these files are written by a python script from a template
@@ -227,3 +231,16 @@ __marimo__/
 .streamlit/secrets.toml
 
 .DS_Store
+
+# Otros
+proyecto_recomendador_peliculas.txt
+scripts/export_project_md.py
+project_export.md
+
+# Documentación local (no versionar)
+CLAUDE.md
+descripcion_funcional.md
+descripcion_tecnica.md
+presentacion_avances_vision.pptx.pdf
+plan_siglip_offline.md
+plan_siglip_online.md
