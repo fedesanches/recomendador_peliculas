@@ -9,10 +9,11 @@ from pydantic import BaseModel
 
 from src.recommender import MovieRecommender
 
-METRICS_PATH          = Path("data/processed/metrics.json")
-METRICS_COMBINED_PATH = Path("data/processed/metrics_combined.json")
-METRICS_SIGLIP_PATH   = Path("data/processed/metrics_siglip.json")
-METRICS_DINOV2_PATH   = Path("data/processed/metrics_dinov2.json")
+METRICS_PATH          = Path("data/metrics/metrics_clips.json")
+METRICS_COMBINED_PATH = Path("data/metrics/metrics_clips_combined.json")
+
+METRICS_SIGLIP_PATH   = Path("data/metrics/metrics_siglip.json")
+METRICS_DINOV2_PATH   = Path("data/metrics/metrics_dinov2.json")
 
 app = FastAPI(title="Recomendador de Películas", version="1.0")
 
