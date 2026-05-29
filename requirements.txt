@@ -1,5 +1,6 @@
 # Dependencias core
 torch
+torchvision
 transformers
 Pillow
 
