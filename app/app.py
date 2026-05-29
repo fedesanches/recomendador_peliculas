@@ -85,6 +85,11 @@ _METRICS_PATH          = Path("data/metrics/metrics_clips.json")
 _METRICS_COMBINED_PATH = Path("data/metrics/metrics_clips_combined.json")
 
 def _load_metrics(combined: bool = False) -> MetricResult | None:
+    # Siempre lee del archivo local primero (evita llamar a la API antes de que esté lista)
+    path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
+    if path.exists():
+        return MetricResult(**json.loads(path.read_text()))
+    # Fallback: intentar via API (solo si el archivo no existe localmente)
     if RECOMMENDER_MODE == "api":
         endpoint = f"{RECOMMENDER_API_URL}/metrics{'/combined' if combined else ''}"
         try:
@@ -93,11 +98,7 @@ def _load_metrics(combined: bool = False) -> MetricResult | None:
             return MetricResult(**response.json())
         except Exception as e:
             logger.error(f"Error al obtener métricas desde API: {e}")
-            return None
-    path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
-    if not path.exists():
-        return None
-    return MetricResult(**json.loads(path.read_text()))
+    return None
 
 metrics          = _load_metrics(combined=False)
 metrics_combined = _load_metrics(combined=True)
