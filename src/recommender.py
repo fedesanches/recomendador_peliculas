@@ -13,6 +13,10 @@ SIGLIP_INDEX_PATH          = "data/processed/faiss_siglip.index"
 SIGLIP_INDEX_METADATA_PATH = "data/processed/index_metadata_siglip.csv"
 DINOV2_INDEX_PATH          = "data/processed/faiss_dinov2.index"
 DINOV2_INDEX_METADATA_PATH = "data/processed/index_metadata_dinov2.csv"
+NOTEXTIMG_INDEX_PATH = "data/processed/faiss_notextimg.index"
+NOTEXTIMG_META_PATH  = "data/processed/index_metadata_notextimg.csv"
+NOTEXTIMG_COMBINED_INDEX_PATH = "data/processed/faiss_notextimg_combined.index"
+NOTEXTIMG_COMBINED_META_PATH  = "data/processed/index_metadata_notextimg_combined.csv"
 
 
 class MovieRecommender:
@@ -26,6 +30,10 @@ class MovieRecommender:
         siglip_metadata_path: str = SIGLIP_INDEX_METADATA_PATH,
         dinov2_index_path: str = DINOV2_INDEX_PATH,
         dinov2_metadata_path: str = DINOV2_INDEX_METADATA_PATH,
+        notextimg_index_path: str = NOTEXTIMG_INDEX_PATH,
+        notextimg_metadata_path: str = NOTEXTIMG_META_PATH,
+        notextimg_combined_index_path: str = NOTEXTIMG_COMBINED_INDEX_PATH,
+        notextimg_combined_metadata_path: str = NOTEXTIMG_COMBINED_META_PATH,
     ):
         self.encoder = CLIPEncoder()
         self.index = MovieIndex()
@@ -49,6 +57,15 @@ class MovieRecommender:
             self.dinov2_index = MovieIndex(dim=1024)
             self.dinov2_index.load(dinov2_index_path, dinov2_metadata_path)
 
+        self.notextimg_index = None
+        self.notextimg_index_combined = None
+        if Path(notextimg_index_path).exists() and Path(notextimg_metadata_path).exists():
+            self.notextimg_index = MovieIndex()
+            self.notextimg_index.load(notextimg_index_path, notextimg_metadata_path)
+        if Path(notextimg_combined_index_path).exists() and Path(notextimg_combined_metadata_path).exists():
+            self.notextimg_index_combined = MovieIndex()
+            self.notextimg_index_combined.load(notextimg_combined_index_path, notextimg_combined_metadata_path)
+
     def _get_clip_index(self, combined: bool) -> MovieIndex:
         return self.index_combined if combined else self.index
 
@@ -65,6 +82,14 @@ class MovieRecommender:
                 raise RuntimeError("Índice DINOv2 no disponible.")
             vector = self.dinov2_encoder.encode_image(image_path)
             return self.dinov2_index.search(vector, top_k)
+        if model == "notextimg":
+            if self.notextimg_index is None and self.notextimg_index_combined is None:
+                raise RuntimeError("Índice NoTextImg no disponible.")
+            vector = self.encoder.encode_image(image_path)
+            index = self.notextimg_index_combined if combined else self.notextimg_index
+            if index is None:
+                raise RuntimeError("Índice NoTextImg solicitado no disponible.")
+            return index.search(vector, top_k)
         vector = self.encoder.encode_image(image_path)
         return self._get_clip_index(combined).search(vector, top_k)
 
@@ -73,6 +98,8 @@ class MovieRecommender:
     ) -> pd.DataFrame:
         if model == "dinov2":
             raise RuntimeError("DINOv2 no soporta búsqueda por texto.")
+        if model == "notextimg":
+            raise RuntimeError("NoTextImg no soporta búsqueda por texto.")
         if model == "siglip":
             if self.siglip_encoder is None:
                 raise RuntimeError("Índice SigLIP no disponible.")
