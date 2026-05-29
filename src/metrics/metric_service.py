@@ -8,6 +8,8 @@ INDEX_PATH          = "data/processed/faiss.index"
 INDEX_META_PATH     = "data/processed/index_metadata.csv"
 INDEX_COMBINED_PATH      = "data/processed/faiss_combined.index"
 INDEX_COMBINED_META_PATH = "data/processed/index_metadata_combined.csv"
+SIGLIP_INDEX_PATH      = "data/processed/faiss_siglip.index"
+SIGLIP_INDEX_META_PATH = "data/processed/index_metadata_siglip.csv"
 
 
 @dataclass
@@ -42,9 +44,14 @@ def calculate(
     n_samples:      int   = 500,
     umbral_jaccard: float = 0.5,
     combined:       bool  = False,
+    model:          str   = "clip",
 ) -> MetricResult:
-    index_path = INDEX_COMBINED_PATH if combined else INDEX_PATH
-    meta_path  = INDEX_COMBINED_META_PATH if combined else INDEX_META_PATH
+    if model == "siglip":
+        index_path = SIGLIP_INDEX_PATH
+        meta_path  = SIGLIP_INDEX_META_PATH
+    else:
+        index_path = INDEX_COMBINED_PATH if combined else INDEX_PATH
+        meta_path  = INDEX_COMBINED_META_PATH if combined else INDEX_META_PATH
     index    = faiss.read_index(index_path)
     metadata = pd.read_csv(meta_path)
 
@@ -108,15 +115,19 @@ def save(result: MetricResult, path: str = "data/processed/metrics.json") -> Non
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(asdict(result), indent=2))
 
-def calculate_and_save(combined: bool = False):
-    result = calculate(combined=combined)
-    path   = "data/processed/metrics_combined.json" if combined else "data/processed/metrics.json"
+def calculate_and_save(combined: bool = False, model: str = "clip"):
+    result = calculate(combined=combined, model=model)
+    if model == "siglip":
+        path = "data/processed/metrics_siglip.json"
+    else:
+        path = "data/processed/metrics_combined.json" if combined else "data/processed/metrics.json"
     save(result, path)
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--combined", action="store_true", help="Usar índice imagen+texto")
+    parser.add_argument("--combined", action="store_true", help="Usar índice CLIP imagen+texto")
+    parser.add_argument("--model", default="clip", choices=["clip", "siglip"], help="Encoder a evaluar")
     args = parser.parse_args()
-    calculate_and_save(combined=args.combined)
-    print(calculate(combined=args.combined))
+    calculate_and_save(combined=args.combined, model=args.model)
+    print(calculate(combined=args.combined, model=args.model))

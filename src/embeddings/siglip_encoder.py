@@ -30,6 +30,8 @@ class SiglipEncoder:
          - Retorna: Tensor de características normalizadas.
          """
         feats = self.model.get_image_features(pixel_values=pixel_values)
+        if hasattr(feats, "pooler_output"):
+            feats = feats.pooler_output
         return feats / feats.norm(dim=-1, keepdim=True)
 
     def _text_features(self, inputs) -> torch.Tensor:
@@ -39,6 +41,8 @@ class SiglipEncoder:
          - Retorna: Tensor de características normalizadas.
         """
         feats = self.model.get_text_features(**inputs)
+        if hasattr(feats, "pooler_output"):
+            feats = feats.pooler_output
         return feats / feats.norm(dim=-1, keepdim=True)
 
     @torch.no_grad()
