@@ -16,13 +16,19 @@ INDEX_PATH = "data/processed/faiss.index"
 META_PATH  = "data/processed/index_metadata.csv"
 COMBINED_INDEX_PATH = "data/processed/faiss_combined.index"
 COMBINED_META_PATH  = "data/processed/index_metadata_combined.csv"
+NOTEXTIMG_INDEX_PATH = "data/processed/faiss_notextimg.index"
+NOTEXTIMG_META_PATH = "data/processed/index_metadata_notextimg.csv"
+NOTEXTIMG_COMBINED_INDEX_PATH = "data/processed/faiss_notextimg_combined.index"
+NOTEXTIMG_COMBINED_META_PATH = "data/processed/index_metadata_notextimg_combined.csv"
 
 logger = getLogger(__name__)
 
 def _download_index():
     Path(INDEX_PATH).parent.mkdir(parents=True, exist_ok=True)
     if not Path(INDEX_PATH).exists() or not Path(META_PATH).exists() \
-        or not Path(COMBINED_INDEX_PATH).exists() or not Path(COMBINED_META_PATH).exists():
+        or not Path(COMBINED_INDEX_PATH).exists() or not Path(COMBINED_META_PATH).exists() \
+        or not Path(NOTEXTIMG_INDEX_PATH).exists() or not Path(NOTEXTIMG_META_PATH).exists() \
+        or not Path(NOTEXTIMG_COMBINED_INDEX_PATH).exists() or not Path(NOTEXTIMG_COMBINED_META_PATH).exists():
         from huggingface_hub import HfFileSystem
         fs = HfFileSystem()
         if not Path(INDEX_PATH).exists():
@@ -35,6 +41,16 @@ def _download_index():
         if not Path(COMBINED_META_PATH).exists():
             fs.get(f"{BUCKET}/index_metadata_combined.csv", COMBINED_META_PATH)
 
+        if not Path(NOTEXTIMG_INDEX_PATH).exists():
+            fs.get(f"{BUCKET}/faiss_notextimg.index", NOTEXTIMG_INDEX_PATH)
+        if not Path(NOTEXTIMG_META_PATH).exists():
+            fs.get(f"{BUCKET}/index_metadata_notextimg.csv", NOTEXTIMG_META_PATH)
+
+        if not Path(NOTEXTIMG_COMBINED_INDEX_PATH).exists():
+            fs.get(f"{BUCKET}/faiss_notextimg_combined.index", NOTEXTIMG_COMBINED_INDEX_PATH)
+        if not Path(NOTEXTIMG_COMBINED_META_PATH).exists():
+            fs.get(f"{BUCKET}/index_metadata_notextimg_combined.csv", NOTEXTIMG_COMBINED_META_PATH)
+
 
 _download_index()
 
@@ -43,6 +59,8 @@ import base64
 import requests as http_requests
 import pandas as pd
 import gradio as gr
+from src.embeddings.clip_encoder import CLIPEncoder
+from src.index.faiss_index import MovieIndex
 from src.metrics.metric_service import MetricResult
 
 
@@ -52,25 +70,42 @@ RECOMMENDER_API_URL = os.getenv("RECOMMENDER_API_URL", "http://localhost:8000")
 if RECOMMENDER_MODE == "embedded":
     from src.recommender import MovieRecommender
     _recommender = MovieRecommender()
+    _clip_encoder = CLIPEncoder()
 
-def _recommend_embedded(image_path: str, top_k: int, combined: bool) -> pd.DataFrame:
-    return _recommender.recommend_from_image(image_path, top_k=top_k, combined=combined)
+    _notextimg_index = MovieIndex()
+    _notextimg_index.load(NOTEXTIMG_INDEX_PATH, NOTEXTIMG_META_PATH)
 
-def _recommend_api(image_path: str, top_k: int, combined: bool) -> pd.DataFrame:
+    _notextimg_index_combined = MovieIndex()
+    _notextimg_index_combined.load(NOTEXTIMG_COMBINED_INDEX_PATH, NOTEXTIMG_COMBINED_META_PATH)
+
+def _recommend_embedded(image_path: str, top_k: int, index_mode: str) -> pd.DataFrame:
+    if index_mode == "Solo imagen":
+        return _recommender.recommend_from_image(image_path, top_k=top_k, combined=False)
+    if index_mode == "Imagen + Texto":
+        return _recommender.recommend_from_image(image_path, top_k=top_k, combined=True)
+    if index_mode == "Solo imagen (No textimg)":
+        vector = _clip_encoder.encode_image(image_path)
+        return _notextimg_index.search(vector, top_k)
+    if index_mode == "Imagen + Texto (No textimg)":
+        vector = _clip_encoder.encode_image(image_path)
+        return _notextimg_index_combined.search(vector, top_k)
+    raise ValueError(f"Modo de índice desconocido: {index_mode}")
+
+def _recommend_api(image_path: str, top_k: int, index_mode: str) -> pd.DataFrame:
     with open(image_path, "rb") as f:
         response = http_requests.post(
             f"{RECOMMENDER_API_URL}/recommend/image",
             files={"file": f},
-            params={"top_k": top_k, "combined": combined},
+            params={"top_k": top_k, "index_mode": index_mode},
             timeout=30,
         )
     response.raise_for_status()
     return pd.DataFrame(response.json()["results"])
 
-def _recommend(image_path: str, top_k: int, combined: bool) -> pd.DataFrame:
+def _recommend(image_path: str, top_k: int, index_mode: str) -> pd.DataFrame:
     if RECOMMENDER_MODE == "api":
-        return _recommend_api(image_path, top_k, combined)
-    return _recommend_embedded(image_path, top_k, combined)
+        return _recommend_api(image_path, top_k, index_mode)
+    return _recommend_embedded(image_path, top_k, index_mode)
 
 
 def _img_to_base64(path: str) -> str:
@@ -83,24 +118,30 @@ import json
 
 _METRICS_PATH          = Path("data/metrics/metrics_clips.json")
 _METRICS_COMBINED_PATH = Path("data/metrics/metrics_clips_combined.json")
+_METRICS_NOTXTIMG_PATH          = Path("data/metrics/metrics_clip_notextimg.json")
+_METRICS_NOTXTIMG_COMBINED_PATH = Path("data/metrics/metrics_clip_notextimg_combined.json")
 
-def _load_metrics(combined: bool = False) -> MetricResult | None:
-    if RECOMMENDER_MODE == "api":
-        endpoint = f"{RECOMMENDER_API_URL}/metrics{'/combined' if combined else ''}"
-        try:
-            response = http_requests.get(endpoint, timeout=10)
-            response.raise_for_status()
-            return MetricResult(**response.json())
-        except Exception as e:
-            logger.error(f"Error al obtener métricas desde API: {e}")
-            return None
-    path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
+def _load_metrics(combined: bool = False, path: Path | None = None) -> MetricResult | None:
+    if path is None:
+        if RECOMMENDER_MODE == "api":
+            endpoint = f"{RECOMMENDER_API_URL}/metrics{'/combined' if combined else ''}"
+            try:
+                response = http_requests.get(endpoint, timeout=10)
+                response.raise_for_status()
+                return MetricResult(**response.json())
+            except Exception as e:
+                logger.error(f"Error al obtener métricas desde API: {e}")
+                return None
+        path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
+
     if not path.exists():
         return None
     return MetricResult(**json.loads(path.read_text()))
 
-metrics          = _load_metrics(combined=False)
-metrics_combined = _load_metrics(combined=True)
+metrics                    = _load_metrics(combined=False)
+metrics_combined           = _load_metrics(combined=True)
+metrics_notextimg          = _load_metrics(path=_METRICS_NOTXTIMG_PATH)
+metrics_notextimg_combined = _load_metrics(path=_METRICS_NOTXTIMG_COMBINED_PATH)
 
 
 METRIC_DEFINITIONS = {
@@ -161,8 +202,7 @@ def recommend(image_path: str, top_k: int, index_mode: str):
     if image_path is None:
         return [], "Por favor, sube una imagen de portada."
 
-    combined = index_mode == "Imagen + Texto"
-    results = _recommend(image_path, top_k=int(top_k), combined=combined)
+    results = _recommend(image_path, top_k=int(top_k), index_mode=index_mode)
 
     images = []
     text = ""
@@ -191,7 +231,12 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
         with gr.Column():
             top_k_slider = gr.Slider(1, 20, value=5, step=1, label="Recomendaciones")
             index_radio = gr.Radio(
-                choices=["Solo imagen", "Imagen + Texto"],
+                choices=[
+                    "Solo imagen",
+                    "Imagen + Texto",
+                    "Solo imagen (No textimg)",
+                    "Imagen + Texto (No textimg)",
+                ],
                 value="Solo imagen",
                 label="Índice de búsqueda",
             )
@@ -202,6 +247,10 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
                         gr.HTML(format_metrics(metrics))
                     with gr.Tab("Imagen + Texto (CLIP combinado)"):
                         gr.HTML(format_metrics(metrics_combined))
+                    with gr.Tab("Solo imagen (No textimg)"):
+                        gr.HTML(format_metrics(metrics_notextimg))
+                    with gr.Tab("Imagen + Texto (No textimg combinado)"):
+                        gr.HTML(format_metrics(metrics_notextimg_combined))
 
     recommend_btn = gr.Button("Buscar similares", variant="primary")
     gallery = gr.Gallery(label="Películas recomendadas", columns=5, height="auto")
