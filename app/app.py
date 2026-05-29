@@ -133,25 +133,11 @@ def _load_metrics(combined: bool = False, path: Path | None = None) -> MetricRes
                 logger.error(f"Error al obtener métricas desde API: {e}")
                 return None
         path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
-
-def _load_metrics(combined: bool = False) -> MetricResult | None:
-    # Siempre lee del archivo local primero (evita llamar a la API antes de que esté lista)
-    path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
-    if path.exists():
-        return MetricResult(**json.loads(path.read_text()))
-    # Fallback: intentar via API (solo si el archivo no existe localmente)
-    if RECOMMENDER_MODE == "api":
-        endpoint = f"{RECOMMENDER_API_URL}/metrics{'/combined' if combined else ''}"
-        try:
-            response = http_requests.get(endpoint, timeout=10)
-            response.raise_for_status()
-            return MetricResult(**response.json())
-        except Exception as e:
-            logger.error(f"Error al obtener métricas desde API: {e}")
-    return None
     if not path.exists():
         return None
     return MetricResult(**json.loads(path.read_text()))
+
+
 
 metrics                    = _load_metrics(combined=False)
 metrics_combined           = _load_metrics(combined=True)
