@@ -10,6 +10,8 @@ INDEX_COMBINED_PATH      = "data/processed/faiss_combined.index"
 INDEX_COMBINED_META_PATH = "data/processed/index_metadata_combined.csv"
 SIGLIP_INDEX_PATH      = "data/processed/faiss_siglip.index"
 SIGLIP_INDEX_META_PATH = "data/processed/index_metadata_siglip.csv"
+DINOV2_INDEX_PATH      = "data/processed/faiss_dinov2.index"
+DINOV2_INDEX_META_PATH = "data/processed/index_metadata_dinov2.csv"
 
 
 @dataclass
@@ -49,6 +51,9 @@ def calculate(
     if model == "siglip":
         index_path = SIGLIP_INDEX_PATH
         meta_path  = SIGLIP_INDEX_META_PATH
+    elif model == "dinov2":
+        index_path = DINOV2_INDEX_PATH
+        meta_path  = DINOV2_INDEX_META_PATH
     else:
         index_path = INDEX_COMBINED_PATH if combined else INDEX_PATH
         meta_path  = INDEX_COMBINED_META_PATH if combined else INDEX_META_PATH
@@ -119,6 +124,8 @@ def calculate_and_save(combined: bool = False, model: str = "clip"):
     result = calculate(combined=combined, model=model)
     if model == "siglip":
         path = "data/processed/metrics_siglip.json"
+    elif model == "dinov2":
+        path = "data/processed/metrics_dinov2.json"
     else:
         path = "data/processed/metrics_combined.json" if combined else "data/processed/metrics.json"
     save(result, path)
@@ -127,7 +134,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--combined", action="store_true", help="Usar índice CLIP imagen+texto")
-    parser.add_argument("--model", default="clip", choices=["clip", "siglip"], help="Encoder a evaluar")
+    parser.add_argument("--model", default="clip", choices=["clip", "siglip", "dinov2"], help="Encoder a evaluar")
     args = parser.parse_args()
     calculate_and_save(combined=args.combined, model=args.model)
     print(calculate(combined=args.combined, model=args.model))

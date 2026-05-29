@@ -12,6 +12,7 @@ from src.recommender import MovieRecommender
 METRICS_PATH          = Path("data/processed/metrics.json")
 METRICS_COMBINED_PATH = Path("data/processed/metrics_combined.json")
 METRICS_SIGLIP_PATH   = Path("data/processed/metrics_siglip.json")
+METRICS_DINOV2_PATH   = Path("data/processed/metrics_dinov2.json")
 
 app = FastAPI(title="Recomendador de Películas", version="1.0")
 
@@ -63,6 +64,13 @@ def get_metrics_siglip():
     return json.loads(METRICS_SIGLIP_PATH.read_text())
 
 
+@app.get("/metrics/dinov2")
+def get_metrics_dinov2():
+    if not METRICS_DINOV2_PATH.exists():
+        raise HTTPException(status_code=404, detail="Métricas DINOv2 no disponibles. Ejecutar src/metrics/metric_service.py --model dinov2 primero.")
+    return json.loads(METRICS_DINOV2_PATH.read_text())
+
+
 @app.post("/recommend/image", response_model=RecommendResponse)
 async def recommend_by_image(
     file: UploadFile = File(...),
@@ -90,6 +98,8 @@ async def recommend_by_image(
 
 @app.post("/recommend/text", response_model=RecommendResponse)
 def recommend_by_text(query: str, top_k: int = 5, combined: bool = False, model: str = "clip"):
+    if model == "dinov2":
+        raise HTTPException(status_code=400, detail="DINOv2 no soporta búsqueda por texto.")
     try:
         results = recommender.recommend_from_text(query, top_k=top_k, combined=combined, model=model)
     except RuntimeError as e:
