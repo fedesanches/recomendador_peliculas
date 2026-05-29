@@ -9,6 +9,22 @@ os.environ.setdefault("RECOMMENDER_API_URL", "http://localhost:7860")
 import importlib.util
 from pathlib import Path
 
+# ── Descarga índices desde HF Hub antes de importar api (que carga MovieRecommender) ──
+_BUCKET = "buckets/carbonecar/recomendador-peliculas-index"
+_REQUIRED = [
+    ("data/processed/faiss.index",                    "faiss.index"),
+    ("data/processed/index_metadata.csv",             "index_metadata.csv"),
+    ("data/processed/faiss_combined.index",           "faiss_combined.index"),
+    ("data/processed/index_metadata_combined.csv",    "index_metadata_combined.csv"),
+]
+Path("data/processed").mkdir(parents=True, exist_ok=True)
+if any(not Path(local).exists() for local, _ in _REQUIRED):
+    from huggingface_hub import HfFileSystem
+    _fs = HfFileSystem()
+    for local, remote in _REQUIRED:
+        if not Path(local).exists():
+            _fs.get(f"{_BUCKET}/{remote}", local)
+
 import gradio as gr
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
