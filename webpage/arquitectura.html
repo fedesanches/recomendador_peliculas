@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitectura — Recomendador de Películas</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:      #e50914;
+    --red-dim:  rgba(229,9,20,.18);
+    --red-glow: rgba(229,9,20,.35);
+    --bg:       #0a0a0a;
+    --bg2:      #111;
+    --bg3:      #181818;
+    --border:   rgba(255,255,255,.08);
+    --border2:  rgba(255,255,255,.14);
+    --text:     #e5e5e5;
+    --dim:      #777;
+    --green:    #46d369;
+    --blue:     #4a9eff;
+    --orange:   #f5a623;
+    --purple:   #a855f7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    padding: 40px 32px 60px;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header-label {
+    font-size: .72rem;
+    letter-spacing: .18em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+  }
+  .header h1 span { color: var(--red); }
+  .header-sub {
+    margin-top: 8px;
+    font-size: .78rem;
+    color: var(--dim);
+    letter-spacing: .05em;
+  }
+
+  /* ── Layout ── */
+  .diagram {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Layer ── */
+  .layer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .layer-label {
+    font-size: .65rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .layer-label::before, .layer-label::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: var(--border2);
+  }
+
+  .layer-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* ── Connector (vertical) ── */
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 40px;
+    position: relative;
+  }
+  .connector-line {
+    width: 2px;
+    flex: 1;
+    background: linear-gradient(to bottom, var(--border2), var(--red-glow), var(--border2));
+  }
+  .connector-label {
+    font-size: .6rem;
+    color: var(--dim);
+    letter-spacing: .08em;
+    background: var(--bg);
+    padding: 0 6px;
+    position: absolute;
+    white-space: nowrap;
+  }
+
+  /* ── Node ── */
+  .node {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    position: relative;
+    transition: border-color .2s, box-shadow .2s;
+    cursor: default;
+  }
+  .node:hover {
+    border-color: var(--border2);
+    box-shadow: 0 0 24px rgba(255,255,255,.04);
+  }
+
+  .node-icon {
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+  }
+  .node-title {
+    font-family: 'Syne', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+    white-space: nowrap;
+  }
+  .node-subtitle {
+    font-size: .66rem;
+    color: var(--dim);
+    line-height: 1.4;
+  }
+  .node-tag {
+    display: inline-block;
+    font-size: .58rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  /* ── Color variants ── */
+  .node-front  { border-color: rgba(74,158,255,.25); }
+  .node-front:hover { border-color: rgba(74,158,255,.5); box-shadow: 0 0 20px rgba(74,158,255,.08); }
+  .node-front .node-tag { background: rgba(74,158,255,.12); color: var(--blue); }
+
+  .node-api    { border-color: var(--red-glow); }
+  .node-api:hover { border-color: var(--red); box-shadow: 0 0 20px var(--red-dim); }
+  .node-api .node-tag { background: var(--red-dim); color: var(--red); }
+
+  .node-ml     { border-color: rgba(168,85,247,.25); }
+  .node-ml:hover { border-color: rgba(168,85,247,.5); box-shadow: 0 0 20px rgba(168,85,247,.08); }
+  .node-ml .node-tag { background: rgba(168,85,247,.12); color: var(--purple); }
+
+  .node-index  { border-color: rgba(245,166,35,.22); }
+  .node-index:hover { border-color: rgba(245,166,35,.5); box-shadow: 0 0 20px rgba(245,166,35,.08); }
+  .node-index .node-tag { background: rgba(245,166,35,.12); color: var(--orange); }
+
+  .node-store  { border-color: rgba(70,211,105,.2); }
+  .node-store:hover { border-color: rgba(70,211,105,.45); box-shadow: 0 0 20px rgba(70,211,105,.07); }
+  .node-store .node-tag { background: rgba(70,211,105,.1); color: var(--green); }
+
+  .node-ext    { border-color: var(--border); background: var(--bg2); }
+  .node-ext .node-tag { background: rgba(255,255,255,.06); color: var(--dim); }
+
+  /* ── API central (wide) ── */
+  .node-api-central {
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+  }
+  .node-api-central .node-title { font-size: 1rem; }
+  .node-api-endpoints {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .endpoint {
+    font-size: .6rem;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(229,9,20,.2);
+    color: var(--dim);
+    white-space: nowrap;
+  }
+  .endpoint span { color: var(--red); font-weight: 700; }
+
+  /* ── ML block ── */
+  .ml-block {
+    background: var(--bg3);
+    border: 1px solid rgba(168,85,247,.2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    width: 100%;
+    max-width: 680px;
+    position: relative;
+  }
+  .ml-block-label {
+    font-size: .62rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin-bottom: 14px;
+    opacity: .7;
+  }
+  .ml-inner {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .ml-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--dim);
+    font-size: .9rem;
+    padding: 0 2px;
+  }
+
+  /* ── Indices block ── */
+  .indices-block {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+  }
+
+  /* ── Bottom row ── */
+  .bottom-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 780px;
+  }
+
+  /* ── Offline pipeline ── */
+  .pipeline {
+    background: var(--bg2);
+    border: 1px dashed rgba(255,255,255,.1);
+    border-radius: 10px;
+    padding: 16px 20px;
+    width: 100%;
+    max-width: 780px;
+    margin-top: 8px;
+  }
+  .pipeline-label {
+    font-size: .62rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pipeline-label::after {
+    content: 'ejecutado una sola vez';
+    font-size: .6rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: rgba(255,255,255,.2);
+    font-style: italic;
+  }
+  .pipeline-flow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    gap: 6px 4px;
+  }
+  .pipe-step {
+    font-size: .68rem;
+    padding: 5px 12px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    color: var(--dim);
+  }
+  .pipe-step strong { color: var(--text); }
+  .pipe-arrow {
+    color: rgba(255,255,255,.2);
+    font-size: .8rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Divider ── */
+  .h-connector {
+    width: 100%;
+    max-width: 780px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .h-connector::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--border2), var(--red-glow), var(--border2));
+  }
+  .h-connector-badge {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    font-size: .58rem;
+    padding: 3px 10px;
+    color: var(--dim);
+    letter-spacing: .06em;
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .66rem;
+    color: var(--dim);
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── Wide connector lines between fronts and api ── */
+  .dual-connector {
+    width: 100%;
+    max-width: 780px;
+    height: 44px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 14%;
+  }
+  .dual-connector-line {
+    width: 2px;
+    height: 44px;
+    background: linear-gradient(to bottom, transparent, var(--border2), var(--red-glow));
+  }
+  .dual-connector-base {
+    position: absolute;
+    bottom: 0; left: 14%; right: 14%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--red-glow), var(--red-glow), transparent);
+  }
+
+  /* ── Mode badge on nodes ── */
+  .node-mode {
+    position: absolute;
+    top: -9px; right: 10px;
+    font-size: .55rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Recomendador de Películas por Portada</div>
+  <h1>Arquitectura del <span>Sistema</span></h1>
+  <div class="header-sub">CLIP · FAISS · FastAPI · Gradio · VisionFlix</div>
+</div>
+
+<div class="diagram">
+
+  <!-- ═══ LAYER 1: FRONTENDS ═══ -->
+  <div class="layer">
+    <div class="layer-label">Capa de presentación</div>
+    <div class="layer-row">
+
+      <!-- Gradio -->
+      <div class="node node-front" style="min-width:210px">
+        <div class="node-mode" style="background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.2)">Python</div>
+        <div class="node-icon">🎞</div>
+        <div class="node-title">Gradio App</div>
+        <div class="node-subtitle">
+          app/app.py<br>
+          Upload portada · Top-K slider<br>
+          Selector de índice · Métricas (tabs)
+        </div>
+        <div class="node-tag">Gradio Blocks</div>
+      </div>
+
+      <!-- VisionFlix -->
+      <div class="node node-front" style="min-width:210px">
+        <div class="node-mode" style="background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.2)">JS</div>
+        <div class="node-icon">🎬</div>
+        <div class="node-title">VisionFlix Web</div>
+        <div class="node-subtitle">
+          webpage/<br>
+          Catálogo · Historial · Búsqueda<br>
+          Modal "Buscar similares" (tabs)
+        </div>
+        <div class="node-tag">Vanilla JS · HTML/CSS</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Connector fronts → API -->
+  <div class="dual-connector">
+    <div class="dual-connector-line"></div>
+    <div class="dual-connector-base"></div>
+    <div class="dual-connector-line"></div>
+  </div>
+
+  <!-- ═══ LAYER 2: API ═══ -->
+  <div class="layer">
+    <div class="layer-label">Capa de servicios</div>
+    <div class="node node-api node-api-central">
+      <div class="node-icon">⚡</div>
+      <div class="node-title">FastAPI — api.py</div>
+      <div class="node-endpoints" style="margin-top:10px">
+        <div class="node-api-endpoints">
+          <div class="endpoint"><span>GET</span>  /health</div>
+          <div class="endpoint"><span>GET</span>  /metrics</div>
+          <div class="endpoint"><span>GET</span>  /metrics/combined</div>
+          <div class="endpoint"><span>POST</span> /recommend/image</div>
+          <div class="endpoint"><span>POST</span> /recommend/text</div>
+          <div class="endpoint"><span>POST</span> /recommend/url/both</div>
+        </div>
+      </div>
+      <div style="margin-top:10px"><div class="node-tag">uvicorn · CORS *</div></div>
+    </div>
+  </div>
+
+  <!-- Connector API → ML -->
+  <div class="h-connector"><div class="h-connector-badge">encode + search</div></div>
+
+  <!-- ═══ LAYER 3: ML CORE ═══ -->
+  <div class="layer">
+    <div class="layer-label">Capa ML</div>
+    <div class="ml-block">
+      <div class="ml-block-label">MovieRecommender — src/recommender.py</div>
+      <div class="ml-inner">
+
+        <!-- CLIP Encoder -->
+        <div class="node node-ml" style="flex:0 0 auto;min-width:160px">
+          <div class="node-icon">🧠</div>
+          <div class="node-title">CLIPEncoder</div>
+          <div class="node-subtitle">
+            clip-vit-base-patch32<br>
+            512 dims · normalizado<br>
+            encode_image()<br>
+            encode_text()
+          </div>
+          <div class="node-tag">PyTorch · HF Transformers</div>
+        </div>
+
+        <div class="ml-arrow">→</div>
+
+        <!-- Indices -->
+        <div class="indices-block">
+          <div class="node node-index" style="flex:1">
+            <div class="node-icon">🗂</div>
+            <div class="node-title">FAISS Image</div>
+            <div class="node-subtitle">
+              faiss.index<br>
+              IndexFlatIP<br>
+              solo imagen<br>
+              ~70k vectores
+            </div>
+            <div class="node-tag">IndexFlatIP</div>
+          </div>
+          <div class="node node-index" style="flex:1;border-color:rgba(245,166,35,.4)">
+            <div class="node-icon">🗂</div>
+            <div class="node-title">FAISS Combined</div>
+            <div class="node-subtitle">
+              faiss_combined.index<br>
+              IndexFlatIP<br>
+              imagen + texto<br>
+              ~70k vectores
+            </div>
+            <div class="node-tag" style="background:rgba(245,166,35,.18)">IndexFlatIP ✦ texto</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector ML → Data -->
+  <div class="h-connector"><div class="h-connector-badge">lee / persiste</div></div>
+
+  <!-- ═══ LAYER 4: DATA + EXTERNAL ═══ -->
+  <div class="layer">
+    <div class="layer-label">Datos y servicios externos</div>
+    <div class="bottom-row">
+
+      <div class="node node-store" style="min-width:160px">
+        <div class="node-icon">💾</div>
+        <div class="node-title">data/processed/</div>
+        <div class="node-subtitle">
+          faiss.index<br>
+          faiss_combined.index<br>
+          index_metadata.csv<br>
+          metrics.json · metrics_combined.json
+        </div>
+        <div class="node-tag">Local FS</div>
+      </div>
+
+      <div class="node node-store" style="min-width:160px">
+        <div class="node-icon">🤗</div>
+        <div class="node-title">HuggingFace Hub</div>
+        <div class="node-subtitle">
+          buckets/carbonecar/<br>
+          recomendador-peliculas-index<br>
+          descarga automática al iniciar
+        </div>
+        <div class="node-tag">HfFileSystem</div>
+      </div>
+
+      <div class="node node-ext" style="min-width:160px">
+        <div class="node-icon">🎥</div>
+        <div class="node-title">TMDB API</div>
+        <div class="node-subtitle">
+          Pósters · sinopsis · géneros<br>
+          image.tmdb.org/t/p/w500<br>
+          descargado por el backend
+        </div>
+        <div class="node-tag">External</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ OFFLINE PIPELINE ═══ -->
+  <div class="layer" style="margin-top:20px">
+    <div class="pipeline">
+      <div class="pipeline-label">⚙ Pipeline offline</div>
+      <div class="pipeline-flow">
+        <div class="pipe-step"><strong>MovieLens</strong><br>movies.csv · links.csv</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><strong>download_posters.py</strong><br>TMDB API</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><strong>build_index.py</strong><br>/ Colab notebook</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><strong>CLIPEncoder</strong><br>encode_images_batch()</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><strong>FAISS index</strong><br>imagen · combinado</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><strong>HuggingFace Hub</strong><br>upload</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /diagram -->
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Frontend</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>API / Gateway</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>ML Core</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Índice FAISS</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Almacenamiento</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--border2)"></div>Servicio externo</div>
+</div>
+
+</body>
+</html>

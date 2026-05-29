@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionFlix — Recomendaciones por portada</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #e50914;
+      --red-dark: #b00610;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Poster grid background ── */
+    .poster-grid {
+      position: fixed;
+      inset: -4%;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 6px;
+      transform: scale(1.08);
+      animation: drift 30s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift {
+      from { transform: scale(1.08) translate(0, 0); }
+      to   { transform: scale(1.12) translate(-1%, -1%); }
+    }
+
+    .poster-grid img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: brightness(.55) saturate(.8);
+      transition: filter .4s;
+    }
+
+    /* ── Overlays ── */
+    .overlay-dark {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+    }
+
+    .overlay-gradient {
+      position: fixed; inset: 0;
+      background:
+        linear-gradient(to right,  rgba(0,0,0,.75) 0%, rgba(0,0,0,.1) 50%, rgba(0,0,0,.75) 100%),
+        linear-gradient(to bottom, rgba(0,0,0,.6)  0%, rgba(0,0,0,.0) 30%, rgba(0,0,0,.0) 70%, rgba(0,0,0,.9) 100%);
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 24px 5%;
+      z-index: 10;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      color: var(--red);
+      letter-spacing: .04em;
+      text-decoration: none;
+      text-shadow: 0 2px 12px rgba(229,9,20,.4);
+      user-select: none;
+    }
+
+    /* ── Hero content ── */
+    .hero {
+      position: fixed; inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      text-align: center;
+      padding: 0 20px;
+    }
+
+    .hero-eyebrow {
+      font-size: clamp(.7rem, 1.2vw, .85rem);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 20px;
+      opacity: .9;
+      animation: fadein .8s .2s both;
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 8vw, 7rem);
+      line-height: .95;
+      letter-spacing: .01em;
+      color: #fff;
+      text-shadow: 0 4px 32px rgba(0,0,0,.8);
+      animation: fadein .8s .35s both;
+      max-width: 900px;
+    }
+
+    .hero-title span { color: var(--red); }
+
+    .hero-sub {
+      margin-top: 22px;
+      font-size: clamp(.85rem, 1.6vw, 1.05rem);
+      font-weight: 300;
+      color: rgba(255,255,255,.75);
+      line-height: 1.6;
+      max-width: 520px;
+      animation: fadein .8s .5s both;
+    }
+
+    .hero-sub strong { color: #fff; font-weight: 600; }
+
+    .btn-start {
+      margin-top: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--red);
+      color: #fff;
+      font-size: clamp(.95rem, 1.4vw, 1.15rem);
+      font-weight: 600;
+      letter-spacing: .03em;
+      padding: 16px 44px;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 24px rgba(229,9,20,.4);
+      animation: fadein .8s .65s both;
+    }
+
+    .btn-start:hover {
+      background: var(--red-dark);
+      transform: scale(1.04);
+      box-shadow: 0 6px 32px rgba(229,9,20,.55);
+    }
+
+    .btn-start svg { transition: transform .2s; }
+    .btn-start:hover svg { transform: translateX(4px); }
+
+    /* ── Pill badges ── */
+    .hero-badges {
+      margin-top: 28px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadein .8s .8s both;
+    }
+
+    .badge {
+      font-size: .72rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.6);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(6px);
+    }
+
+    /* ── Bottom bar ── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 5%;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: .72rem;
+      color: rgba(255,255,255,.3);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    .bottom-bar a { color: rgba(255,255,255,.4); text-decoration: none; }
+    .bottom-bar a:hover { color: rgba(255,255,255,.7); }
+
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .poster-grid { grid-template-columns: repeat(4, 1fr); }
+      .hero-title  { font-size: clamp(2.6rem, 12vw, 4rem); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Poster mosaic background -->
+  <div class="poster-grid" aria-hidden="true">
+    <img src="https://image.tmdb.org/t/p/w342/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/3bhkrj58Vtu7enYsRolD1fZdja1.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/q719jXXEzOoYaps6babgKnONONX.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/bX2xnavhMYjWDoZp1VM6VnU1xwe.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/k7eYdWvhYQyRQoU2TB2A2Xu2TfD.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/191nKfP0ehp3uIvWqgPbFmI4lv9.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/7fn624j5lj3xTme2SgiLCeuedmO.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/mfnkSeeVOBVheuyn2lo4tfmOPQb.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/lOMGc8bnSwQhS4XyE1S99uH8NXf.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/yz4QVqPx3h1hD1DfqqQkCq3rmxW.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/kjWsMh72V6d8KRLV4EOoSJLT1H7.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/5VTN0pR8gcqV3EPUHHfMGnJYN9L.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/2hFvxCCWrTmCYwfy7yum0GKRi3Y.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/gCI2AeMV4IHSewhJkzsur5MEp6R.jpg" alt="">
+    <img src="https://image.tmdb.org/t/p/w342/tuFaWiqX0TXoWu7DGNcmX3UW7sT.jpg" alt="">
+  </div>
+
+  <div class="overlay-dark" aria-hidden="true"></div>
+  <div class="overlay-gradient" aria-hidden="true"></div>
+
+  <!-- Navbar -->
+  <nav>
+    <span class="logo">VISIONFLIX</span>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <p class="hero-eyebrow">Recomendaciones potenciadas por IA</p>
+    <h1 class="hero-title">
+      Encontrá tu próxima<br>película <span>favorita</span>
+    </h1>
+    <p class="hero-sub">
+      Subí la portada de cualquier película y encontramos las más similares usando
+      <strong>CLIP</strong> y búsqueda vectorial en miles de títulos.
+    </p>
+    <a href="/app.html" class="btn-start">
+      Comenzar
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+    <div class="hero-badges">
+      <span class="badge">CLIP ViT-B/32</span>
+      <span class="badge">FAISS vector search</span>
+      <span class="badge">+70k películas</span>
+      <span class="badge">2 índices</span>
+    </div>
+  </section>
+
+  <!-- Bottom bar -->
+  <div class="bottom-bar">
+    <a href="/gradio">App Gradio</a>
+    <span>·</span>
+    <a href="/docs">API Docs</a>
+    <span>·</span>
+    <span>Maestría IA · 2025</span>
+  </div>
+
+</body>
+</html>
