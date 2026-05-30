@@ -64,7 +64,7 @@ def calculate(
         index_path = INDEX_COMBINED_PATH if combined else INDEX_PATH
         meta_path  = INDEX_COMBINED_META_PATH if combined else INDEX_META_PATH
     index    = faiss.read_index(index_path)
-    metadata = pd.read_csv(meta_path)
+    metadata = pd.read_csv(meta_path).iloc[:index.ntotal].reset_index(drop=True)
 
     metadata["genre_list"] = metadata["genres"].fillna("").apply(
         lambda x: [g.strip().lower() for g in x.split(", ")] if x else []
@@ -81,7 +81,7 @@ def calculate(
     aciertos          = 0
 
     for idx, _ in sample.iterrows():
-        vector   = index.reconstruct(idx)
+        vector   = index.reconstruct(int(idx))
         _, indices = index.search(vector.reshape(1, -1), k + 1)
         indices_recomendados = indices[0][1:]
 
