@@ -89,6 +89,12 @@ def _recommend_embedded(image_path: str, top_k: int, index_mode: str) -> pd.Data
     if index_mode == "Imagen + Texto (No textimg)":
         vector = _clip_encoder.encode_image(image_path)
         return _notextimg_index_combined.search(vector, top_k)
+    if index_mode == "Solo imagen (siglip)":
+        return _recommender.recommend_from_image(image_path, top_k=top_k, combined=False, model="siglip")
+    if index_mode == "Imagen + Texto (siglip)":
+        return _recommender.recommend_from_image(image_path, top_k=top_k, combined=True, model="siglip")
+    if index_mode == "Solo imagen (dinov2)":
+        return _recommender.recommend_from_image(image_path, top_k=top_k, combined=False, model="dinov2")
     raise ValueError(f"Modo de índice desconocido: {index_mode}")
 
 def _recommend_api(image_path: str, top_k: int, index_mode: str) -> pd.DataFrame:
@@ -116,10 +122,13 @@ _DCG_IMG = f"data:image/png;base64,{_img_to_base64('DCG.png')}"
 
 import json
 
-_METRICS_PATH          = Path("data/metrics/metrics_clips.json")
-_METRICS_COMBINED_PATH = Path("data/metrics/metrics_clips_combined.json")
+_METRICS_PATH                   = Path("data/metrics/metrics_clips.json")
+_METRICS_COMBINED_PATH          = Path("data/metrics/metrics_clips_combined.json")
 _METRICS_NOTXTIMG_PATH          = Path("data/metrics/metrics_clip_notextimg.json")
 _METRICS_NOTXTIMG_COMBINED_PATH = Path("data/metrics/metrics_clip_notextimg_combined.json")
+_METRICS_SIGLIP_PATH            = Path("data/metrics/metrics_siglip.json")
+_METRICS_SIGLIP_COMBINED_PATH   = Path("data/metrics/metrics_siglip_combined.json")
+_METRICS_DINOV2_PATH            = Path("data/metrics/metrics_dinov2.json")
 
 def _load_metrics(combined: bool = False, path: Path | None = None) -> MetricResult | None:
     # Resolver path local primero
@@ -143,6 +152,9 @@ metrics                    = _load_metrics(combined=False)
 metrics_combined           = _load_metrics(combined=True)
 metrics_notextimg          = _load_metrics(path=_METRICS_NOTXTIMG_PATH)
 metrics_notextimg_combined = _load_metrics(path=_METRICS_NOTXTIMG_COMBINED_PATH)
+metrics_siglip             = _load_metrics(path=_METRICS_SIGLIP_PATH)
+metrics_siglip_combined    = _load_metrics(path=_METRICS_SIGLIP_COMBINED_PATH)
+metrics_dinov2             = _load_metrics(path=_METRICS_DINOV2_PATH)
 
 
 METRIC_DEFINITIONS = {
@@ -237,6 +249,9 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
                     "Imagen + Texto",
                     "Solo imagen (No textimg)",
                     "Imagen + Texto (No textimg)",
+                    "Solo imagen (siglip)",
+                    "Imagen + Texto (siglip)",
+                    "Solo imagen (dinov2)",
                 ],
                 value="Solo imagen",
                 label="Índice de búsqueda",
@@ -252,6 +267,12 @@ with gr.Blocks(title="Recomendador de Películas por Portada") as demo:
                         gr.HTML(format_metrics(metrics_notextimg))
                     with gr.Tab("Imagen + Texto (No textimg combinado)"):
                         gr.HTML(format_metrics(metrics_notextimg_combined))
+                    with gr.Tab("Solo imagen (SigLIP)"):
+                        gr.HTML(format_metrics(metrics_siglip))
+                    with gr.Tab("Imagen + Texto (SigLIP)"):
+                        gr.HTML(format_metrics(metrics_siglip_combined))
+                    with gr.Tab("Solo imagen (DINOv2)"):
+                        gr.HTML(format_metrics(metrics_dinov2))
 
     recommend_btn = gr.Button("Buscar similares", variant="primary")
     gallery = gr.Gallery(label="Películas recomendadas", columns=5, height="auto")

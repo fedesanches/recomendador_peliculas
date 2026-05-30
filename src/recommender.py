@@ -9,8 +9,10 @@ INDEX_PATH          = "data/processed/faiss.index"
 INDEX_METADATA_PATH = "data/processed/index_metadata.csv"
 COMBINED_INDEX_PATH          = "data/processed/faiss_combined.index"
 COMBINED_INDEX_METADATA_PATH = "data/processed/index_metadata_combined.csv"
-SIGLIP_INDEX_PATH          = "data/processed/faiss_siglip.index"
-SIGLIP_INDEX_METADATA_PATH = "data/processed/index_metadata_siglip.csv"
+SIGLIP_INDEX_PATH                   = "data/processed/faiss_siglip.index"
+SIGLIP_INDEX_METADATA_PATH          = "data/processed/index_metadata_siglip.csv"
+SIGLIP_COMBINED_INDEX_PATH          = "data/processed/faiss_siglip_combined.index"
+SIGLIP_COMBINED_INDEX_METADATA_PATH = "data/processed/index_metadata_siglip_combined.csv"
 DINOV2_INDEX_PATH          = "data/processed/faiss_dinov2.index"
 DINOV2_INDEX_METADATA_PATH = "data/processed/index_metadata_dinov2.csv"
 NOTEXTIMG_INDEX_PATH = "data/processed/faiss_notextimg.index"
@@ -28,6 +30,8 @@ class MovieRecommender:
         combined_metadata_path: str = COMBINED_INDEX_METADATA_PATH,
         siglip_index_path: str = SIGLIP_INDEX_PATH,
         siglip_metadata_path: str = SIGLIP_INDEX_METADATA_PATH,
+        siglip_combined_index_path: str = SIGLIP_COMBINED_INDEX_PATH,
+        siglip_combined_metadata_path: str = SIGLIP_COMBINED_INDEX_METADATA_PATH,
         dinov2_index_path: str = DINOV2_INDEX_PATH,
         dinov2_metadata_path: str = DINOV2_INDEX_METADATA_PATH,
         notextimg_index_path: str = NOTEXTIMG_INDEX_PATH,
@@ -43,11 +47,18 @@ class MovieRecommender:
 
         self.siglip_encoder = None
         self.siglip_index = None
+        self.siglip_combined_index = None
         if Path(siglip_index_path).exists() and Path(siglip_metadata_path).exists():
             from src.embeddings.siglip_encoder import SiglipEncoder
             self.siglip_encoder = SiglipEncoder()
             self.siglip_index = MovieIndex(dim=768)
             self.siglip_index.load(siglip_index_path, siglip_metadata_path)
+        if Path(siglip_combined_index_path).exists() and Path(siglip_combined_metadata_path).exists():
+            if self.siglip_encoder is None:
+                from src.embeddings.siglip_encoder import SiglipEncoder
+                self.siglip_encoder = SiglipEncoder()
+            self.siglip_combined_index = MovieIndex(dim=768)
+            self.siglip_combined_index.load(siglip_combined_index_path, siglip_combined_metadata_path)
 
         self.dinov2_encoder = None
         self.dinov2_index = None
@@ -76,6 +87,10 @@ class MovieRecommender:
             if self.siglip_encoder is None:
                 raise RuntimeError("Índice SigLIP no disponible.")
             vector = self.siglip_encoder.encode_image(image_path)
+            if combined:
+                if self.siglip_combined_index is None:
+                    raise RuntimeError("Índice SigLIP combinado no disponible.")
+                return self.siglip_combined_index.search(vector, top_k)
             return self.siglip_index.search(vector, top_k)
         if model == "dinov2":
             if self.dinov2_encoder is None:
@@ -104,6 +119,10 @@ class MovieRecommender:
             if self.siglip_encoder is None:
                 raise RuntimeError("Índice SigLIP no disponible.")
             vector = self.siglip_encoder.encode_text(text)
+            if combined:
+                if self.siglip_combined_index is None:
+                    raise RuntimeError("Índice SigLIP combinado no disponible.")
+                return self.siglip_combined_index.search(vector, top_k)
             return self.siglip_index.search(vector, top_k)
         vector = self.encoder.encode_text(text)
         return self._get_clip_index(combined).search(vector, top_k)

@@ -8,8 +8,10 @@ INDEX_PATH          = "data/processed/faiss.index"
 INDEX_META_PATH     = "data/processed/index_metadata.csv"
 INDEX_COMBINED_PATH      = "data/processed/faiss_combined.index"
 INDEX_COMBINED_META_PATH = "data/processed/index_metadata_combined.csv"
-SIGLIP_INDEX_PATH      = "data/processed/faiss_siglip.index"
-SIGLIP_INDEX_META_PATH = "data/processed/index_metadata_siglip.csv"
+SIGLIP_INDEX_PATH               = "data/processed/faiss_siglip.index"
+SIGLIP_INDEX_META_PATH          = "data/processed/index_metadata_siglip.csv"
+SIGLIP_COMBINED_INDEX_PATH      = "data/processed/faiss_siglip_combined.index"
+SIGLIP_COMBINED_INDEX_META_PATH = "data/processed/index_metadata_siglip_combined.csv"
 DINOV2_INDEX_PATH      = "data/processed/faiss_dinov2.index"
 DINOV2_INDEX_META_PATH = "data/processed/index_metadata_dinov2.csv"
 
@@ -49,8 +51,12 @@ def calculate(
     model:          str   = "clip",
 ) -> MetricResult:
     if model == "siglip":
-        index_path = SIGLIP_INDEX_PATH
-        meta_path  = SIGLIP_INDEX_META_PATH
+        if combined:
+            index_path = SIGLIP_COMBINED_INDEX_PATH
+            meta_path  = SIGLIP_COMBINED_INDEX_META_PATH
+        else:
+            index_path = SIGLIP_INDEX_PATH
+            meta_path  = SIGLIP_INDEX_META_PATH
     elif model == "dinov2":
         index_path = DINOV2_INDEX_PATH
         meta_path  = DINOV2_INDEX_META_PATH
@@ -58,7 +64,7 @@ def calculate(
         index_path = INDEX_COMBINED_PATH if combined else INDEX_PATH
         meta_path  = INDEX_COMBINED_META_PATH if combined else INDEX_META_PATH
     index    = faiss.read_index(index_path)
-    metadata = pd.read_csv(meta_path)
+    metadata = pd.read_csv(meta_path).iloc[:index.ntotal].reset_index(drop=True)
 
     metadata["genre_list"] = metadata["genres"].fillna("").apply(
         lambda x: [g.strip().lower() for g in x.split(", ")] if x else []
@@ -75,7 +81,7 @@ def calculate(
     aciertos          = 0
 
     for idx, _ in sample.iterrows():
-        vector   = index.reconstruct(idx)
+        vector   = index.reconstruct(int(idx))
         _, indices = index.search(vector.reshape(1, -1), k + 1)
         indices_recomendados = indices[0][1:]
 
@@ -123,11 +129,11 @@ def save(result: MetricResult, path: str = "data/processed/metrics.json") -> Non
 def calculate_and_save(combined: bool = False, model: str = "clip"):
     result = calculate(combined=combined, model=model)
     if model == "siglip":
-        path = "data/processed/metrics_siglip.json"
+        path = "data/metrics/metrics_siglip_combined.json" if combined else "data/metrics/metrics_siglip.json"
     elif model == "dinov2":
-        path = "data/processed/metrics_dinov2.json"
+        path = "data/metrics/metrics_dinov2.json"
     else:
-        path = "data/processed/metrics_combined.json" if combined else "data/processed/metrics.json"
+        path = "data/metrics/metrics_clips_combined.json" if combined else "data/metrics/metrics_clips.json"
     save(result, path)
 
 if __name__ == "__main__":

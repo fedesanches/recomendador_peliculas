@@ -13,8 +13,9 @@ from src.index.faiss_index import MovieIndex
 METRICS_PATH          = Path("data/metrics/metrics_clips.json")
 METRICS_COMBINED_PATH = Path("data/metrics/metrics_clips_combined.json")
 
-METRICS_SIGLIP_PATH           = Path("data/metrics/metrics_siglip.json")
-METRICS_DINOV2_PATH           = Path("data/metrics/metrics_dinov2.json")
+METRICS_SIGLIP_PATH             = Path("data/metrics/metrics_siglip.json")
+METRICS_SIGLIP_COMBINED_PATH    = Path("data/metrics/metrics_siglip_combined.json")
+METRICS_DINOV2_PATH             = Path("data/metrics/metrics_dinov2.json")
 METRICS_NOTEXTIMG_PATH          = Path("data/metrics/metrics_clip_notextimg.json")
 METRICS_NOTEXTIMG_COMBINED_PATH = Path("data/metrics/metrics_clip_notextimg_combined.json")
 
@@ -154,6 +155,13 @@ def get_metrics_siglip():
     if not METRICS_SIGLIP_PATH.exists():
         raise HTTPException(status_code=404, detail="Métricas SigLIP no disponibles. Ejecutar src/metrics/metric_service.py --model siglip primero.")
     return json.loads(METRICS_SIGLIP_PATH.read_text())
+
+
+@app.get("/metrics/siglip/combined")
+def get_metrics_siglip_combined():
+    if not METRICS_SIGLIP_COMBINED_PATH.exists():
+        raise HTTPException(status_code=404, detail="Métricas SigLIP combined no disponibles. Ejecutar src/metrics/metric_service.py --model siglip --combined primero.")
+    return json.loads(METRICS_SIGLIP_COMBINED_PATH.read_text())
 
 
 @app.get("/metrics/dinov2")
