@@ -3,8 +3,7 @@ title: Recomendador de Películas por Portada
 emoji: 🎬
 colorFrom: blue
 colorTo: purple
-sdk: gradio
-app_file: app.py
+sdk: docker
 pinned: false
 ---
 
