@@ -181,9 +181,99 @@
       opacity: .9;
     }
 
+    .model-card { cursor: pointer; }
+    .model-card:hover { transform: translateY(-2px); }
+
+    /* ── Modal ── */
+    #metrics-modal {
+      position: fixed; inset: 0; z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(8px);
+      opacity: 0; pointer-events: none;
+      transition: opacity .22s;
+    }
+    #metrics-modal.open { opacity: 1; pointer-events: auto; }
+
+    .metrics-modal-panel {
+      background: #141414;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      width: 100%; max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 70px rgba(0,0,0,.9);
+      animation: mPop .22s ease;
+      scrollbar-width: thin; scrollbar-color: #333 transparent;
+    }
+    @keyframes mPop {
+      from { transform: scale(.94) translateY(16px); opacity: 0; }
+      to   { transform: scale(1)   translateY(0);    opacity: 1; }
+    }
+
+    .mmodal-header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 24px 24px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      position: sticky; top: 0; background: #141414; z-index: 1;
+    }
+    .mmodal-icon { font-size: 2.4rem; flex-shrink: 0; }
+    .mmodal-title { font-size: 1.25rem; font-weight: 900; }
+    .mmodal-desc { font-size: .82rem; color: var(--text-dim); margin-top: 3px; }
+    .mmodal-badge {
+      font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+      font-weight: 700; padding: 4px 12px; border-radius: 20px;
+      margin-left: auto; flex-shrink: 0;
+    }
+    .mmodal-close {
+      background: rgba(255,255,255,.08); border: none; color: #e5e5e5;
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+      font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background .2s; margin-left: 8px;
+    }
+    .mmodal-close:hover { background: rgba(255,255,255,.18); }
+
+    .mmodal-body { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+
+    .mmodal-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px;
+    }
+    .mmodal-row-label {
+      font-size: .8rem; color: var(--text-dim);
+      width: 160px; flex-shrink: 0;
+    }
+    .mmodal-track {
+      flex: 1; height: 10px;
+      background: rgba(255,255,255,.08);
+      border-radius: 5px; overflow: hidden;
+    }
+    .mmodal-fill {
+      height: 100%; border-radius: 5px;
+      transition: width .7s ease;
+    }
+    .mmodal-val {
+      font-size: 1.05rem; font-weight: 900;
+      width: 70px; text-align: right; flex-shrink: 0;
+    }
+    .mmodal-row-plain {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px;
+    }
+    .mmodal-row-plain .mmodal-row-label { width: auto; }
+    .mmodal-row-plain .mmodal-val { font-size: 1.05rem; }
+
     @media (max-width: 700px) {
       .models-grid { grid-template-columns: 1fr; }
       .def-grid    { grid-template-columns: 1fr; }
+      .mmodal-row-label { width: 110px; }
     }
   </style>
 </head>
@@ -314,6 +404,22 @@
 
   </div>
 
+  <!-- ── Metrics Modal ── -->
+  <div id="metrics-modal">
+    <div class="metrics-modal-panel">
+      <div class="mmodal-header">
+        <div class="mmodal-icon" id="mm-icon"></div>
+        <div>
+          <div class="mmodal-title" id="mm-title"></div>
+          <div class="mmodal-desc"  id="mm-desc"></div>
+        </div>
+        <div class="mmodal-badge" id="mm-badge"></div>
+        <button class="mmodal-close" id="mm-close">✕</button>
+      </div>
+      <div class="mmodal-body" id="mm-body"></div>
+    </div>
+  </div>
+
   <script>
     const MODELS = [
       {
@@ -390,6 +496,8 @@
         </div>`;
     }
 
+    const dataStore = {};
+
     function buildCard(model, data) {
       const rows = Object.entries(METRIC_LABELS).map(([key, meta]) => {
         const val = data[key];
@@ -413,7 +521,7 @@
       </tr>`;
 
       return `
-        <div class="model-card">
+        <div class="model-card" data-model-key="${model.key}">
           <div class="model-card-header">
             <span class="model-icon">${model.icon}</span>
             <div>
@@ -428,6 +536,75 @@
           </table>
         </div>`;
     }
+
+    const BAR_COLORS = {
+      precision:        "#4a9eff",
+      ndcg:             "#a855f7",
+      gender_coherence: "#46d369",
+      recall:           "#e50914",
+    };
+
+    function openModal(modelKey) {
+      const { model, data } = dataStore[modelKey];
+      document.getElementById("mm-icon").textContent  = model.icon;
+      document.getElementById("mm-title").textContent = model.name;
+      document.getElementById("mm-desc").textContent  = model.desc;
+      const badge = document.getElementById("mm-badge");
+      badge.textContent = model.badge;
+      badge.className = "mmodal-badge " + model.cls;
+
+      const body = document.getElementById("mm-body");
+      const rows = Object.entries(METRIC_LABELS).map(([key, meta]) => {
+        const val = data[key];
+        const pct = Math.round(val * 100);
+        if (meta.bar) {
+          return `<div class="mmodal-row">
+            <span class="mmodal-row-label">${meta.label}</span>
+            <div class="mmodal-track">
+              <div class="mmodal-fill" style="width:0%;background:${BAR_COLORS[key]}" data-pct="${pct}"></div>
+            </div>
+            <span class="mmodal-val">${val.toFixed(4)}</span>
+          </div>`;
+        }
+        return `<div class="mmodal-row-plain">
+          <span class="mmodal-row-label">${meta.label}</span>
+          <span class="mmodal-val">${val.toFixed(4)}</span>
+        </div>`;
+      });
+
+      rows.push(`<div class="mmodal-row-plain">
+        <span class="mmodal-row-label">Aciertos</span>
+        <span class="mmodal-val">${data.aciertos} <span style="font-size:.8rem;font-weight:400;color:var(--text-dim)">(${(data.aciertos_pct*100).toFixed(1)}%)</span></span>
+      </div>`);
+
+      body.innerHTML = rows.join("");
+
+      const modal = document.getElementById("metrics-modal");
+      modal.classList.add("open");
+      document.body.style.overflow = "hidden";
+
+      requestAnimationFrame(() => {
+        body.querySelectorAll(".mmodal-fill[data-pct]").forEach(el => {
+          el.style.width = el.dataset.pct + "%";
+        });
+      });
+    }
+
+    function closeModal() {
+      document.getElementById("metrics-modal").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    document.getElementById("mm-close").addEventListener("click", closeModal);
+    document.getElementById("metrics-modal").addEventListener("click", e => {
+      if (e.target === document.getElementById("metrics-modal")) closeModal();
+    });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+    document.getElementById("models-grid").addEventListener("click", e => {
+      const card = e.target.closest("[data-model-key]");
+      if (card) openModal(card.dataset.modelKey);
+    });
 
     async function loadAll() {
       const grid = document.getElementById("models-grid");
@@ -444,6 +621,7 @@
       const loaded = [];
       results.forEach((data, i) => {
         if (!data) return;
+        dataStore[MODELS[i].key] = { model: MODELS[i], data };
         loaded.push({ model: MODELS[i], data });
         grid.insertAdjacentHTML("beforeend", buildCard(MODELS[i], data));
       });

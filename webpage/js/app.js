@@ -401,6 +401,121 @@ function renderPosterResults(container, movies) {
   });
 }
 
+// ─── Poster upload search ──────────────────────────────────────────────────────
+
+function setupPosterSearch() {
+  const dropzone  = $("ps-dropzone");
+  const fileInput = $("ps-file-input");
+  const idle      = $("ps-idle");
+  const preview   = $("ps-preview");
+  const previewImg= $("ps-preview-img");
+  const searchBtn = $("ps-search-btn");
+  const clearBtn  = $("ps-clear-btn");
+  const resultsArea = $("ps-results-area");
+  const loadingEl = $("ps-results-loading");
+  const contentEl = $("ps-content");
+  const errorEl   = $("ps-error");
+
+  let currentFile = null;
+
+  function showIdle() {
+    idle.style.display    = "";
+    preview.style.display = "none";
+    resultsArea.style.display = "none";
+    currentFile = null;
+    fileInput.value = "";
+  }
+
+  function showPreview(file) {
+    currentFile = file;
+    previewImg.src = URL.createObjectURL(file);
+    idle.style.display    = "none";
+    preview.style.display = "";
+  }
+
+  function setLoading(on) {
+    resultsArea.style.display  = "";
+    loadingEl.style.display    = on ? "" : "none";
+    contentEl.style.display    = on ? "none" : "none";
+    errorEl.style.display      = "none";
+    searchBtn.disabled         = on;
+  }
+
+  function showResults(models) {
+    const tabsEl   = $("ps-tabs");
+    const panelsEl = $("ps-panels");
+    tabsEl.innerHTML   = "";
+    panelsEl.innerHTML = "";
+
+    models.forEach((model, i) => {
+      const tab = el("button", `ms-tab${i === 0 ? " ms-tab-active" : ""}`);
+      tab.dataset.psTab = model.key;
+      tab.textContent   = model.label;
+      tabsEl.appendChild(tab);
+
+      const panel = el("div", `ms-tab-panel${i > 0 ? " ms-tab-hidden" : ""}`);
+      panel.id = `ps-panel-${model.key}`;
+      const row = el("div", "ps-movies-row");
+      panel.appendChild(row);
+      panelsEl.appendChild(panel);
+      renderPosterResults(row, model.results);
+    });
+
+    tabsEl.querySelectorAll("[data-ps-tab]").forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabsEl.querySelectorAll("[data-ps-tab]").forEach(t => t.classList.remove("ms-tab-active"));
+        panelsEl.querySelectorAll(".ms-tab-panel").forEach(p => p.classList.add("ms-tab-hidden"));
+        tab.classList.add("ms-tab-active");
+        $(`ps-panel-${tab.dataset.psTab}`).classList.remove("ms-tab-hidden");
+      });
+    });
+
+    loadingEl.style.display = "none";
+    contentEl.style.display = "";
+  }
+
+  // Click on drop zone opens picker
+  dropzone.addEventListener("click", e => {
+    if (e.target === clearBtn || e.target === searchBtn || clearBtn.contains(e.target) || searchBtn.contains(e.target)) return;
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files[0]) showPreview(fileInput.files[0]);
+  });
+
+  // Drag & drop
+  dropzone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropzone.classList.add("drag-over");
+  });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag-over"));
+  dropzone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) showPreview(file);
+  });
+
+  clearBtn.addEventListener("click", e => { e.stopPropagation(); showIdle(); });
+
+  searchBtn.addEventListener("click", async e => {
+    e.stopPropagation();
+    if (!currentFile) return;
+    setLoading(true);
+    try {
+      const { models } = await API.recommendByImage(currentFile, 12);
+      showResults(models);
+    } catch (err) {
+      loadingEl.style.display = "none";
+      errorEl.textContent     = `Error: ${err.message}`;
+      errorEl.style.display   = "";
+    } finally {
+      searchBtn.disabled = false;
+    }
+  });
+}
+
 // ─── Init ──────────────────────────────────────────────────────────────────────
 
 async function init() {
@@ -419,6 +534,7 @@ async function init() {
   $("loading-screen").style.display = "none";
 
   setupSearch();
+  setupPosterSearch();
   await renderApp();
 }
 

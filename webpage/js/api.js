@@ -223,6 +223,63 @@ const API = {
     return res.json(); // { image: [...], combined: [...] }
   },
 
+  /**
+   * Uploads an image file and returns recommendations from all available models.
+   * POST /recommend/image?top_k=N  body: multipart/form-data { file }
+   * Returns { models: [{ key, label, results }] }
+   */
+  async recommendByImage(file, topK = 10) {
+    if (API_CONFIG.USE_MOCK) {
+      await _sleep(1200);
+      const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+      const toResults = movies => shuffle(movies).slice(0, topK).map(m => ({
+        title: m.title,
+        score: 0.55 + Math.random() * 0.45,
+        tmdb_poster_url: API_CONFIG.POSTER_BASE + m.poster,
+        genres: m.genres.join(", "),
+      }));
+      return {
+        models: [
+          { key: "clip-image",         label: "CLIP — Imagen",              results: toResults(MOCK_MOVIES) },
+          { key: "clip-combined",      label: "CLIP — Imagen + Texto",      results: toResults(MOCK_MOVIES) },
+          { key: "notextimg",          label: "CLIP — Sin texto",           results: toResults(MOCK_MOVIES) },
+          { key: "notextimg-combined", label: "CLIP — Sin texto + Texto",   results: toResults(MOCK_MOVIES) },
+          { key: "siglip",             label: "SigLIP",                     results: toResults(MOCK_MOVIES) },
+          { key: "dinov2",             label: "DINOv2",                     results: toResults(MOCK_MOVIES) },
+        ],
+      };
+    }
+
+    const VARIANTS = [
+      { key: "clip-image",         label: "CLIP — Imagen",              params: `top_k=${topK}` },
+      { key: "clip-combined",      label: "CLIP — Imagen + Texto",      params: `top_k=${topK}&combined=true` },
+      { key: "notextimg",          label: "CLIP — Sin texto",           params: `top_k=${topK}&model=notextimg` },
+      { key: "notextimg-combined", label: "CLIP — Sin texto + Texto",   params: `top_k=${topK}&model=notextimg_combined` },
+      { key: "siglip",             label: "SigLIP",                     params: `top_k=${topK}&model=siglip` },
+      { key: "dinov2",             label: "DINOv2",                     params: `top_k=${topK}&model=dinov2` },
+    ];
+
+    const settled = await Promise.allSettled(
+      VARIANTS.map(v => {
+        const fd = new FormData();
+        fd.append("file", file);
+        return fetch(`${API_CONFIG.BASE_URL}/recommend/image?${v.params}`, {
+          method: "POST",
+          body: fd,
+        })
+          .then(r => r.ok ? r.json() : Promise.reject(new Error(r.status)))
+          .then(data => ({ ...v, results: data.results || [] }));
+      })
+    );
+
+    const models = settled
+      .filter(r => r.status === "fulfilled")
+      .map(r => r.value);
+
+    if (models.length === 0) throw new Error("No hay modelos disponibles o el servidor no está activo");
+    return { models };
+  },
+
   posterUrl(path, hero = false) {
     if (!path) return "https://via.placeholder.com/500x750?text=No+Poster";
     const base = hero ? API_CONFIG.POSTER_HERO : API_CONFIG.POSTER_BASE;

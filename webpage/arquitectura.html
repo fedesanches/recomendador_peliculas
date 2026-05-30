@@ -356,6 +356,7 @@
           <div class="endpoint"><span>GET</span> /metrics/notextimg</div>
           <div class="endpoint"><span>GET</span> /metrics/notextimg/combined</div>
           <div class="endpoint"><span>GET</span> /metrics/siglip</div>
+          <div class="endpoint"><span>GET</span> /metrics/siglip/combined</div>
           <div class="endpoint"><span>GET</span> /metrics/dinov2</div>
         </div>
         <div class="endpoint-group">
@@ -395,12 +396,7 @@
             <div class="node-tag">PyTorch</div>
           </div>
           <div class="ml-arrow">→</div>
-          <div class="ml-indices">
-            <div class="idx-node"><strong>faiss.index</strong><span>imagen · ~70k</span></div>
-            <div class="idx-node"><strong>faiss_combined.index</strong><span>(img+text)/2 · ~70k</span></div>
-            <div class="idx-node"><strong>faiss_notextimg.index</strong><span>imagen sin textimg</span></div>
-            <div class="idx-node"><strong>faiss_notextimg_combined.index</strong><span>combinado sin textimg</span></div>
-          </div>
+         
         </div>
 
         <!-- SigLIP group (optional) -->
@@ -415,9 +411,6 @@
             <div class="node-tag" style="background:rgba(45,212,191,.1);color:var(--teal)">HF Transformers</div>
           </div>
           <div class="ml-arrow">→</div>
-          <div class="ml-indices">
-            <div class="idx-node opt"><strong>faiss_siglip.index</strong><span>imagen · 768 dims</span></div>
-          </div>
         </div>
 
         <!-- DINOv2 group (optional) -->
@@ -432,9 +425,6 @@
             <div class="node-tag" style="background:rgba(45,212,191,.1);color:var(--teal)">HF Transformers</div>
           </div>
           <div class="ml-arrow">→</div>
-          <div class="ml-indices">
-            <div class="idx-node opt"><strong>faiss_dinov2.index</strong><span>imagen · 1024 dims</span></div>
-          </div>
         </div>
 
       </div>
@@ -622,6 +612,7 @@ const NODES = {
           <tr><td><span class="method-get">GET</span><code>/metrics/notextimg</code></td><td>CLIP sin textimg</td></tr>
           <tr><td><span class="method-get">GET</span><code>/metrics/notextimg/combined</code></td><td>CLIP sin textimg combinado</td></tr>
           <tr><td><span class="method-get">GET</span><code>/metrics/siglip</code></td><td>SigLIP (opcional)</td></tr>
+          <tr><td><span class="method-get">GET</span><code>/metrics/siglip/combined</code></td><td>SigLIP combinado (opcional)</td></tr>
           <tr><td><span class="method-get">GET</span><code>/metrics/dinov2</code></td><td>DINOv2 (opcional)</td></tr>
         </table>` },
       { title: 'Rutas adicionales', html: `
@@ -754,7 +745,9 @@ const NODES = {
           <div class="arch-file"><code>metrics_clips_combined.json</code><span>CLIP imagen+texto</span></div>
           <div class="arch-file"><code>metrics_clip_notextimg.json</code><span>CLIP sin textimg</span></div>
           <div class="arch-file"><code>metrics_clip_notextimg_combined.json</code><span>CLIP notextimg combinado</span></div>
+          <div class="arch-file"><code>metrics_clip_notextimg_combined.json</code><span>CLIP notextimg combinado</span></div>
           <div class="arch-file"><code>metrics_siglip.json</code><span>SigLIP (opcional)</span></div>
+          <div class="arch-file"><code>metrics_siglip_combined.json</code><span>SigLIP combinado (opcional)</span></div>
           <div class="arch-file"><code>metrics_dinov2.json</code><span>DINOv2 (opcional)</span></div>
         </div>` },
       { title: 'Estructura JSON', html: `
