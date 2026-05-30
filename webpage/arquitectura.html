@@ -21,6 +21,7 @@
     --blue:     #4a9eff;
     --orange:   #f5a623;
     --purple:   #a855f7;
+    --teal:     #2dd4bf;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,377 +35,256 @@
     overflow-x: hidden;
   }
 
-  /* ── Header ── */
-  .header {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-  .header-label {
-    font-size: .72rem;
-    letter-spacing: .18em;
-    color: var(--red);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .header h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
-    font-weight: 800;
-    letter-spacing: -.02em;
-    line-height: 1.1;
-  }
+  .header { text-align: center; margin-bottom: 48px; }
+  .header-label { font-size: .72rem; letter-spacing: .18em; color: var(--red); text-transform: uppercase; margin-bottom: 10px; }
+  .header h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 800; letter-spacing: -.02em; }
   .header h1 span { color: var(--red); }
-  .header-sub {
-    margin-top: 8px;
-    font-size: .78rem;
-    color: var(--dim);
-    letter-spacing: .05em;
-  }
+  .header-sub { margin-top: 8px; font-size: .78rem; color: var(--dim); letter-spacing: .05em; }
 
-  /* ── Layout ── */
-  .diagram {
-    max-width: 1100px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
+  .diagram { max-width: 1160px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
 
-  /* ── Layer ── */
-  .layer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-  }
-
+  /* ── Layers ── */
+  .layer { display: flex; flex-direction: column; align-items: center; }
   .layer-label {
-    font-size: .65rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--dim);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: .65rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
   }
-  .layer-label::before, .layer-label::after {
-    content: '';
-    flex: 1;
-    max-width: 60px;
-    height: 1px;
-    background: var(--border2);
-  }
+  .layer-label::before, .layer-label::after { content: ''; flex: 1; max-width: 60px; height: 1px; background: var(--border2); }
+  .layer-row { display: flex; gap: 14px; justify-content: center; width: 100%; flex-wrap: wrap; }
 
-  .layer-row {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    width: 100%;
+  /* ── Connectors ── */
+  .h-connector {
+    width: 100%; max-width: 900px; height: 36px;
+    display: flex; align-items: center; justify-content: center; position: relative;
   }
-
-  /* ── Connector (vertical) ── */
-  .connector {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    height: 40px;
-    position: relative;
-  }
-  .connector-line {
-    width: 2px;
-    flex: 1;
+  .h-connector::after {
+    content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+    top: 0; bottom: 0; width: 2px;
     background: linear-gradient(to bottom, var(--border2), var(--red-glow), var(--border2));
   }
-  .connector-label {
-    font-size: .6rem;
-    color: var(--dim);
-    letter-spacing: .08em;
-    background: var(--bg);
-    padding: 0 6px;
-    position: absolute;
-    white-space: nowrap;
+  .h-connector-badge {
+    background: var(--bg); border: 1px solid var(--border2); border-radius: 20px;
+    font-size: .58rem; padding: 3px 10px; color: var(--dim);
+    letter-spacing: .06em; position: relative; z-index: 1; white-space: nowrap;
   }
+  .wide-connector {
+    width: 100%; max-width: 900px; height: 44px; position: relative;
+    display: flex; justify-content: space-between; align-items: flex-end; padding: 0 12%;
+  }
+  .wide-connector-line { width: 2px; height: 44px; background: linear-gradient(to bottom, transparent, var(--border2), var(--red-glow)); }
+  .wide-connector-base { position: absolute; bottom: 0; left: 12%; right: 12%; height: 1px; background: linear-gradient(to right, transparent, var(--red-glow), var(--red-glow), transparent); }
 
-  /* ── Node ── */
+  /* ── Nodes ── */
   .node {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    position: relative;
-    transition: border-color .2s, box-shadow .2s;
-    cursor: default;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; position: relative;
+    transition: border-color .2s, box-shadow .2s; cursor: default;
   }
-  .node:hover {
-    border-color: var(--border2);
-    box-shadow: 0 0 24px rgba(255,255,255,.04);
-  }
+  .node:hover { border-color: var(--border2); box-shadow: 0 0 24px rgba(255,255,255,.04); }
+  .node-icon { font-size: 1.3rem; margin-bottom: 6px; }
+  .node-title { font-family: 'Syne', sans-serif; font-size: .82rem; font-weight: 700; margin-bottom: 3px; white-space: nowrap; }
+  .node-subtitle { font-size: .66rem; color: var(--dim); line-height: 1.5; }
+  .node-tag { display: inline-block; font-size: .58rem; letter-spacing: .07em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; margin-top: 6px; font-weight: 600; }
+  .node-mode { position: absolute; top: -9px; right: 10px; font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
 
-  .node-icon {
-    font-size: 1.3rem;
-    margin-bottom: 6px;
-  }
-  .node-title {
-    font-family: 'Syne', sans-serif;
-    font-size: .82rem;
-    font-weight: 700;
-    margin-bottom: 3px;
-    white-space: nowrap;
-  }
-  .node-subtitle {
-    font-size: .66rem;
-    color: var(--dim);
-    line-height: 1.4;
-  }
-  .node-tag {
-    display: inline-block;
-    font-size: .58rem;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 3px;
-    margin-top: 6px;
-    font-weight: 600;
-  }
-
-  /* ── Color variants ── */
   .node-front  { border-color: rgba(74,158,255,.25); }
-  .node-front:hover { border-color: rgba(74,158,255,.5); box-shadow: 0 0 20px rgba(74,158,255,.08); }
+  .node-front:hover  { border-color: rgba(74,158,255,.5); box-shadow: 0 0 20px rgba(74,158,255,.08); }
   .node-front .node-tag { background: rgba(74,158,255,.12); color: var(--blue); }
 
   .node-api    { border-color: var(--red-glow); }
-  .node-api:hover { border-color: var(--red); box-shadow: 0 0 20px var(--red-dim); }
+  .node-api:hover    { border-color: var(--red); box-shadow: 0 0 20px var(--red-dim); }
   .node-api .node-tag { background: var(--red-dim); color: var(--red); }
 
   .node-ml     { border-color: rgba(168,85,247,.25); }
-  .node-ml:hover { border-color: rgba(168,85,247,.5); box-shadow: 0 0 20px rgba(168,85,247,.08); }
+  .node-ml:hover     { border-color: rgba(168,85,247,.5); box-shadow: 0 0 20px rgba(168,85,247,.08); }
   .node-ml .node-tag { background: rgba(168,85,247,.12); color: var(--purple); }
 
   .node-index  { border-color: rgba(245,166,35,.22); }
-  .node-index:hover { border-color: rgba(245,166,35,.5); box-shadow: 0 0 20px rgba(245,166,35,.08); }
+  .node-index:hover  { border-color: rgba(245,166,35,.5); box-shadow: 0 0 20px rgba(245,166,35,.08); }
   .node-index .node-tag { background: rgba(245,166,35,.12); color: var(--orange); }
 
+  .node-index-opt { border-color: rgba(45,212,191,.2); border-style: dashed; }
+  .node-index-opt:hover { border-color: rgba(45,212,191,.45); }
+  .node-index-opt .node-tag { background: rgba(45,212,191,.1); color: var(--teal); }
+
   .node-store  { border-color: rgba(70,211,105,.2); }
-  .node-store:hover { border-color: rgba(70,211,105,.45); box-shadow: 0 0 20px rgba(70,211,105,.07); }
+  .node-store:hover  { border-color: rgba(70,211,105,.45); box-shadow: 0 0 20px rgba(70,211,105,.07); }
   .node-store .node-tag { background: rgba(70,211,105,.1); color: var(--green); }
 
   .node-ext    { border-color: var(--border); background: var(--bg2); }
   .node-ext .node-tag { background: rgba(255,255,255,.06); color: var(--dim); }
 
-  /* ── API central (wide) ── */
-  .node-api-central {
-    width: 100%;
-    max-width: 520px;
-    text-align: center;
-  }
+  /* ── API central ── */
+  .node-api-central { width: 100%; max-width: 760px; text-align: center; }
   .node-api-central .node-title { font-size: 1rem; }
-  .node-api-endpoints {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 10px;
-  }
-  .endpoint {
-    font-size: .6rem;
-    padding: 3px 8px;
-    border-radius: 3px;
-    border: 1px solid rgba(229,9,20,.2);
-    color: var(--dim);
-    white-space: nowrap;
-  }
+  .api-endpoint-groups { display: flex; gap: 16px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .endpoint-group { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+  .endpoint-group-label { font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
+  .endpoint { font-size: .6rem; padding: 3px 8px; border-radius: 3px; border: 1px solid rgba(229,9,20,.2); color: var(--dim); white-space: nowrap; }
   .endpoint span { color: var(--red); font-weight: 700; }
+  .routes-note { font-size: .62rem; color: var(--dim); margin-top: 10px; }
+  .routes-note strong { color: var(--text); }
 
   /* ── ML block ── */
   .ml-block {
-    background: var(--bg3);
-    border: 1px solid rgba(168,85,247,.2);
-    border-radius: 12px;
-    padding: 20px 24px;
-    width: 100%;
-    max-width: 680px;
-    position: relative;
+    background: var(--bg3); border: 1px solid rgba(168,85,247,.2);
+    border-radius: 12px; padding: 20px 24px;
+    width: 100%; max-width: 960px;
   }
-  .ml-block-label {
-    font-size: .62rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--purple);
-    margin-bottom: 14px;
-    opacity: .7;
-  }
-  .ml-inner {
-    display: flex;
-    gap: 12px;
-    align-items: stretch;
-  }
-  .ml-arrow {
-    display: flex;
-    align-items: center;
-    color: var(--dim);
-    font-size: .9rem;
-    padding: 0 2px;
+  .ml-block-label { font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--purple); margin-bottom: 16px; opacity: .7; }
+  .ml-encoder-groups { display: flex; gap: 16px; flex-wrap: wrap; }
+  .ml-encoder-group { display: flex; align-items: flex-start; gap: 10px; background: rgba(0,0,0,.2); border-radius: 8px; padding: 12px; flex: 1; min-width: 260px; }
+  .ml-arrow { display: flex; align-items: center; color: var(--dim); font-size: .9rem; padding-top: 20px; flex-shrink: 0; }
+  .ml-indices { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+  .opt-badge {
+    font-size: .55rem; letter-spacing: .07em; text-transform: uppercase;
+    padding: 1px 6px; border-radius: 3px; font-weight: 700;
+    background: rgba(45,212,191,.1); color: var(--teal); margin-left: 6px;
+    vertical-align: middle;
   }
 
-  /* ── Indices block ── */
-  .indices-block {
-    display: flex;
-    gap: 10px;
-    flex: 1;
+  /* ── index mini node ── */
+  .idx-node {
+    background: rgba(245,166,35,.06); border: 1px solid rgba(245,166,35,.2);
+    border-radius: 6px; padding: 7px 10px; font-size: .65rem;
   }
+  .idx-node.opt { border-color: rgba(45,212,191,.2); background: rgba(45,212,191,.04); border-style: dashed; }
+  .idx-node strong { color: var(--orange); display: block; margin-bottom: 2px; }
+  .idx-node.opt strong { color: var(--teal); }
+  .idx-node span { color: var(--dim); }
 
   /* ── Bottom row ── */
-  .bottom-row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    width: 100%;
-    max-width: 780px;
-  }
+  .bottom-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 900px; }
 
   /* ── Offline pipeline ── */
   .pipeline {
-    background: var(--bg2);
-    border: 1px dashed rgba(255,255,255,.1);
-    border-radius: 10px;
-    padding: 16px 20px;
-    width: 100%;
-    max-width: 780px;
-    margin-top: 8px;
+    background: var(--bg2); border: 1px dashed rgba(255,255,255,.1);
+    border-radius: 10px; padding: 16px 20px;
+    width: 100%; max-width: 900px; margin-top: 8px;
   }
   .pipeline-label {
-    font-size: .62rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--dim);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
   }
-  .pipeline-label::after {
-    content: 'ejecutado una sola vez';
-    font-size: .6rem;
-    letter-spacing: 0;
-    text-transform: none;
-    color: rgba(255,255,255,.2);
-    font-style: italic;
-  }
-  .pipeline-flow {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-    gap: 6px 4px;
-  }
-  .pipe-step {
-    font-size: .68rem;
-    padding: 5px 12px;
-    border-radius: 4px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid var(--border);
-    white-space: nowrap;
-    color: var(--dim);
-  }
+  .pipeline-label::after { content: 'ejecutado una sola vez'; font-size: .6rem; letter-spacing: 0; text-transform: none; color: rgba(255,255,255,.2); font-style: italic; }
+  .pipeline-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 4px; }
+  .pipe-step { font-size: .68rem; padding: 5px 12px; border-radius: 4px; background: rgba(255,255,255,.04); border: 1px solid var(--border); white-space: nowrap; color: var(--dim); }
   .pipe-step strong { color: var(--text); }
-  .pipe-arrow {
-    color: rgba(255,255,255,.2);
-    font-size: .8rem;
-    flex-shrink: 0;
-  }
-
-  /* ── Divider ── */
-  .h-connector {
-    width: 100%;
-    max-width: 780px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-  .h-connector::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    top: 0; bottom: 0;
-    width: 2px;
-    background: linear-gradient(to bottom, var(--border2), var(--red-glow), var(--border2));
-  }
-  .h-connector-badge {
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 20px;
-    font-size: .58rem;
-    padding: 3px 10px;
-    color: var(--dim);
-    letter-spacing: .06em;
-    position: relative;
-    z-index: 1;
-    white-space: nowrap;
-  }
+  .pipe-arrow { color: rgba(255,255,255,.2); font-size: .8rem; flex-shrink: 0; }
 
   /* ── Legend ── */
-  .legend {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 40px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
+  .legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: .66rem; color: var(--dim); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Clickable nodes ── */
+  .node[data-node] { cursor: pointer; }
+  .node[data-node]:hover { transform: translateY(-2px); }
+  .node[data-node]::after {
+    content: '↗';
+    position: absolute; top: 8px; left: 10px;
+    font-size: .6rem; color: var(--dim); opacity: 0;
+    transition: opacity .2s;
   }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: .66rem;
-    color: var(--dim);
+  .node[data-node]:hover::after { opacity: 1; }
+
+  /* ── Popup modal ── */
+  #arch-modal {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background: rgba(0,0,0,.82);
+    backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s;
   }
-  .legend-dot {
-    width: 8px; height: 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
+  #arch-modal.open { opacity: 1; pointer-events: auto; }
+
+  .arch-modal-panel {
+    background: #141414;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    width: 100%; max-width: 700px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 60px rgba(0,0,0,.9);
+    animation: popIn .22s ease;
+    scrollbar-width: thin; scrollbar-color: #333 transparent;
+  }
+  @keyframes popIn {
+    from { transform: scale(.95) translateY(12px); opacity: 0; }
+    to   { transform: scale(1) translateY(0);      opacity: 1; }
   }
 
-  /* ── Wide connector lines between fronts and api ── */
-  .dual-connector {
-    width: 100%;
-    max-width: 780px;
-    height: 44px;
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 0 14%;
+  .arch-modal-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 24px 24px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    position: sticky; top: 0; background: #141414; z-index: 1;
   }
-  .dual-connector-line {
-    width: 2px;
-    height: 44px;
-    background: linear-gradient(to bottom, transparent, var(--border2), var(--red-glow));
+  .arch-modal-icon { font-size: 2.2rem; flex-shrink: 0; }
+  .arch-modal-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; }
+  .arch-modal-badge {
+    font-size: .62rem; letter-spacing: .09em; text-transform: uppercase;
+    font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 4px;
+    display: inline-block;
   }
-  .dual-connector-base {
-    position: absolute;
-    bottom: 0; left: 14%; right: 14%;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--red-glow), var(--red-glow), transparent);
+  .arch-modal-close {
+    margin-left: auto; background: rgba(255,255,255,.08);
+    border: none; color: var(--text); width: 32px; height: 32px;
+    border-radius: 50%; cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background .2s;
   }
+  .arch-modal-close:hover { background: rgba(255,255,255,.18); }
 
-  /* ── Mode badge on nodes ── */
-  .node-mode {
-    position: absolute;
-    top: -9px; right: 10px;
-    font-size: .55rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 10px;
-    font-weight: 700;
+  .arch-modal-body { padding: 20px 24px 28px; }
+
+  .arch-section { margin-bottom: 20px; }
+  .arch-section-title {
+    font-size: .65rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
   }
+  .arch-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .arch-desc { font-size: .82rem; color: var(--dim); line-height: 1.7; }
+  .arch-desc strong { color: var(--text); }
+  .arch-desc code { background: rgba(255,255,255,.07); padding: 1px 6px; border-radius: 3px; font-size: .78rem; color: #aaa; }
+
+  .arch-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+  .arch-pill {
+    font-size: .68rem; padding: 4px 12px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,.1);
+    color: var(--dim); background: rgba(255,255,255,.04);
+  }
+  .arch-pill strong { color: var(--text); font-weight: 600; }
+  .arch-pill.red   { border-color: rgba(229,9,20,.3);   background: rgba(229,9,20,.07);   color: #f87171; }
+  .arch-pill.blue  { border-color: rgba(74,158,255,.3); background: rgba(74,158,255,.07); color: #7cb9ff; }
+  .arch-pill.green { border-color: rgba(70,211,105,.3); background: rgba(70,211,105,.07); color: #6ee7a0; }
+  .arch-pill.teal  { border-color: rgba(45,212,191,.3); background: rgba(45,212,191,.07); color: #5eead4; }
+  .arch-pill.orange{ border-color: rgba(245,166,35,.3); background: rgba(245,166,35,.07); color: #fbbf60; }
+
+  .arch-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+  .arch-table tr { border-bottom: 1px solid rgba(255,255,255,.05); }
+  .arch-table tr:last-child { border-bottom: none; }
+  .arch-table td { padding: 8px 12px; }
+  .arch-table td:first-child { color: var(--dim); white-space: nowrap; }
+  .arch-table td:last-child { color: var(--text); }
+  .arch-table .method-get  { color: #46d369; font-weight: 700; margin-right: 6px; }
+  .arch-table .method-post { color: #f5a623; font-weight: 700; margin-right: 6px; }
+
+  .arch-file-list { display: flex; flex-direction: column; gap: 6px; }
+  .arch-file {
+    display: flex; align-items: baseline; gap: 10px;
+    font-size: .75rem; padding: 7px 12px;
+    background: rgba(255,255,255,.03); border-radius: 5px;
+    border: 1px solid var(--border);
+  }
+  .arch-file code { color: #aaa; flex-shrink: 0; }
+  .arch-file span { color: var(--dim); font-size: .7rem; }
 </style>
 </head>
 <body>
@@ -412,7 +292,7 @@
 <div class="header">
   <div class="header-label">Recomendador de Películas por Portada</div>
   <h1>Arquitectura del <span>Sistema</span></h1>
-  <div class="header-sub">CLIP · FAISS · FastAPI · Gradio · VisionFlix</div>
+  <div class="header-sub">CLIP · SigLIP · DINOv2 · FAISS · FastAPI · Gradio · VisionFlix · Docker</div>
 </div>
 
 <div class="diagram">
@@ -422,28 +302,28 @@
     <div class="layer-label">Capa de presentación</div>
     <div class="layer-row">
 
-      <!-- Gradio -->
-      <div class="node node-front" style="min-width:210px">
+      <div class="node node-front" style="min-width:220px" data-node="gradio">
         <div class="node-mode" style="background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.2)">Python</div>
         <div class="node-icon">🎞</div>
         <div class="node-title">Gradio App</div>
         <div class="node-subtitle">
-          app/app.py<br>
+          app/app.py · ruta <strong style="color:var(--text)">/gradio</strong><br>
           Upload portada · Top-K slider<br>
-          Selector de índice · Métricas (tabs)
+          Selector índice · Métricas (4 modelos)
         </div>
         <div class="node-tag">Gradio Blocks</div>
       </div>
 
-      <!-- VisionFlix -->
-      <div class="node node-front" style="min-width:210px">
+      <div class="node node-front" style="min-width:220px" data-node="visionflix">
         <div class="node-mode" style="background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.2)">JS</div>
         <div class="node-icon">🎬</div>
         <div class="node-title">VisionFlix Web</div>
         <div class="node-subtitle">
-          webpage/<br>
-          Catálogo · Historial · Búsqueda<br>
-          Modal "Buscar similares" (tabs)
+          webpage/ · ruta <strong style="color:var(--text)">/</strong><br>
+          <code style="color:var(--text)">/</code> landing &nbsp;
+          <code style="color:var(--text)">/app.html</code> catálogo<br>
+          <code style="color:var(--text)">/metricas.html</code> &nbsp;
+          <code style="color:var(--text)">/arquitectura.html</code>
         </div>
         <div class="node-tag">Vanilla JS · HTML/CSS</div>
       </div>
@@ -452,29 +332,44 @@
   </div>
 
   <!-- Connector fronts → API -->
-  <div class="dual-connector">
-    <div class="dual-connector-line"></div>
-    <div class="dual-connector-base"></div>
-    <div class="dual-connector-line"></div>
+  <div class="wide-connector">
+    <div class="wide-connector-line"></div>
+    <div class="wide-connector-base"></div>
+    <div class="wide-connector-line"></div>
   </div>
 
   <!-- ═══ LAYER 2: API ═══ -->
   <div class="layer">
-    <div class="layer-label">Capa de servicios</div>
-    <div class="node node-api node-api-central">
+    <div class="layer-label">Capa de servicios — puerto 7860</div>
+    <div class="node node-api node-api-central" data-node="fastapi">
       <div class="node-icon">⚡</div>
       <div class="node-title">FastAPI — api.py</div>
-      <div class="node-endpoints" style="margin-top:10px">
-        <div class="node-api-endpoints">
-          <div class="endpoint"><span>GET</span>  /health</div>
-          <div class="endpoint"><span>GET</span>  /metrics</div>
-          <div class="endpoint"><span>GET</span>  /metrics/combined</div>
+      <div class="api-endpoint-groups">
+        <div class="endpoint-group">
+          <div class="endpoint-group-label">Health</div>
+          <div class="endpoint"><span>GET</span> /health</div>
+        </div>
+        <div class="endpoint-group">
+          <div class="endpoint-group-label">Métricas</div>
+          <div class="endpoint"><span>GET</span> /metrics</div>
+          <div class="endpoint"><span>GET</span> /metrics/combined</div>
+          <div class="endpoint"><span>GET</span> /metrics/notextimg</div>
+          <div class="endpoint"><span>GET</span> /metrics/notextimg/combined</div>
+          <div class="endpoint"><span>GET</span> /metrics/siglip</div>
+          <div class="endpoint"><span>GET</span> /metrics/dinov2</div>
+        </div>
+        <div class="endpoint-group">
+          <div class="endpoint-group-label">Recomendación</div>
           <div class="endpoint"><span>POST</span> /recommend/image</div>
           <div class="endpoint"><span>POST</span> /recommend/text</div>
           <div class="endpoint"><span>POST</span> /recommend/url/both</div>
+          <div class="endpoint"><span>POST</span> /recommend/url/all</div>
         </div>
       </div>
-      <div style="margin-top:10px"><div class="node-tag">uvicorn · CORS *</div></div>
+      <div class="routes-note">
+        también sirve <strong>/gradio</strong> (Gradio ASGI) · <strong>/</strong> (StaticFiles webpage) · <strong>/docs</strong> (Swagger)
+      </div>
+      <div style="margin-top:10px"><div class="node-tag">uvicorn · CORS * · Docker</div></div>
     </div>
   </div>
 
@@ -486,46 +381,59 @@
     <div class="layer-label">Capa ML</div>
     <div class="ml-block">
       <div class="ml-block-label">MovieRecommender — src/recommender.py</div>
-      <div class="ml-inner">
+      <div class="ml-encoder-groups">
 
-        <!-- CLIP Encoder -->
-        <div class="node node-ml" style="flex:0 0 auto;min-width:160px">
-          <div class="node-icon">🧠</div>
-          <div class="node-title">CLIPEncoder</div>
-          <div class="node-subtitle">
-            clip-vit-base-patch32<br>
-            512 dims · normalizado<br>
-            encode_image()<br>
-            encode_text()
+        <!-- CLIP group -->
+        <div class="ml-encoder-group">
+          <div class="node node-ml" style="min-width:130px;flex-shrink:0" data-node="clip">
+            <div class="node-icon">🧠</div>
+            <div class="node-title">CLIPEncoder</div>
+            <div class="node-subtitle">
+              clip-vit-base-patch32<br>
+              512 dims
+            </div>
+            <div class="node-tag">PyTorch</div>
           </div>
-          <div class="node-tag">PyTorch · HF Transformers</div>
+          <div class="ml-arrow">→</div>
+          <div class="ml-indices">
+            <div class="idx-node"><strong>faiss.index</strong><span>imagen · ~70k</span></div>
+            <div class="idx-node"><strong>faiss_combined.index</strong><span>(img+text)/2 · ~70k</span></div>
+            <div class="idx-node"><strong>faiss_notextimg.index</strong><span>imagen sin textimg</span></div>
+            <div class="idx-node"><strong>faiss_notextimg_combined.index</strong><span>combinado sin textimg</span></div>
+          </div>
         </div>
 
-        <div class="ml-arrow">→</div>
-
-        <!-- Indices -->
-        <div class="indices-block">
-          <div class="node node-index" style="flex:1">
-            <div class="node-icon">🗂</div>
-            <div class="node-title">FAISS Image</div>
+        <!-- SigLIP group (optional) -->
+        <div class="ml-encoder-group" style="border:1px dashed rgba(45,212,191,.2);background:rgba(45,212,191,.03)">
+          <div class="node node-ml" style="min-width:130px;flex-shrink:0;border-color:rgba(45,212,191,.3)" data-node="siglip">
+            <div class="node-icon">🔬</div>
+            <div class="node-title">SigLIPEncoder <span class="opt-badge">opt</span></div>
             <div class="node-subtitle">
-              faiss.index<br>
-              IndexFlatIP<br>
-              solo imagen<br>
-              ~70k vectores
+              siglip-base-patch16<br>
+              768 dims
             </div>
-            <div class="node-tag">IndexFlatIP</div>
+            <div class="node-tag" style="background:rgba(45,212,191,.1);color:var(--teal)">HF Transformers</div>
           </div>
-          <div class="node node-index" style="flex:1;border-color:rgba(245,166,35,.4)">
-            <div class="node-icon">🗂</div>
-            <div class="node-title">FAISS Combined</div>
+          <div class="ml-arrow">→</div>
+          <div class="ml-indices">
+            <div class="idx-node opt"><strong>faiss_siglip.index</strong><span>imagen · 768 dims</span></div>
+          </div>
+        </div>
+
+        <!-- DINOv2 group (optional) -->
+        <div class="ml-encoder-group" style="border:1px dashed rgba(45,212,191,.2);background:rgba(45,212,191,.03)">
+          <div class="node node-ml" style="min-width:130px;flex-shrink:0;border-color:rgba(45,212,191,.3)" data-node="dinov2">
+            <div class="node-icon">🦕</div>
+            <div class="node-title">DINOv2Encoder <span class="opt-badge">opt</span></div>
             <div class="node-subtitle">
-              faiss_combined.index<br>
-              IndexFlatIP<br>
-              imagen + texto<br>
-              ~70k vectores
+              dinov2-large<br>
+              1024 dims
             </div>
-            <div class="node-tag" style="background:rgba(245,166,35,.18)">IndexFlatIP ✦ texto</div>
+            <div class="node-tag" style="background:rgba(45,212,191,.1);color:var(--teal)">HF Transformers</div>
+          </div>
+          <div class="ml-arrow">→</div>
+          <div class="ml-indices">
+            <div class="idx-node opt"><strong>faiss_dinov2.index</strong><span>imagen · 1024 dims</span></div>
           </div>
         </div>
 
@@ -541,36 +449,46 @@
     <div class="layer-label">Datos y servicios externos</div>
     <div class="bottom-row">
 
-      <div class="node node-store" style="min-width:160px">
+      <div class="node node-store" style="min-width:180px" data-node="processed">
         <div class="node-icon">💾</div>
         <div class="node-title">data/processed/</div>
         <div class="node-subtitle">
-          faiss.index<br>
-          faiss_combined.index<br>
-          index_metadata.csv<br>
-          metrics.json · metrics_combined.json
+          faiss*.index (6 índices)<br>
+          index_metadata*.csv
         </div>
-        <div class="node-tag">Local FS</div>
+        <div class="node-tag">Índices FAISS</div>
       </div>
 
-      <div class="node node-store" style="min-width:160px">
+      <div class="node node-store" style="min-width:180px" data-node="metrics">
+        <div class="node-icon">📊</div>
+        <div class="node-title">data/metrics/</div>
+        <div class="node-subtitle">
+          metrics_clips.json<br>
+          metrics_clips_combined.json<br>
+          metrics_clip_notextimg.json<br>
+          metrics_siglip.json · metrics_dinov2.json
+        </div>
+        <div class="node-tag">Métricas JSON</div>
+      </div>
+
+      <div class="node node-store" style="min-width:180px" data-node="hfhub">
         <div class="node-icon">🤗</div>
         <div class="node-title">HuggingFace Hub</div>
         <div class="node-subtitle">
           buckets/carbonecar/<br>
           recomendador-peliculas-index<br>
-          descarga automática al iniciar
+          descarga al iniciar si faltan
         </div>
         <div class="node-tag">HfFileSystem</div>
       </div>
 
-      <div class="node node-ext" style="min-width:160px">
+      <div class="node node-ext" style="min-width:160px" data-node="tmdb">
         <div class="node-icon">🎥</div>
         <div class="node-title">TMDB API</div>
         <div class="node-subtitle">
           Pósters · sinopsis · géneros<br>
-          image.tmdb.org/t/p/w500<br>
-          descargado por el backend
+          descargado server-side<br>
+          en /recommend/url/*
         </div>
         <div class="node-tag">External</div>
       </div>
@@ -589,26 +507,363 @@
         <div class="pipe-arrow">→</div>
         <div class="pipe-step"><strong>build_index.py</strong><br>/ Colab notebook</div>
         <div class="pipe-arrow">→</div>
-        <div class="pipe-step"><strong>CLIPEncoder</strong><br>encode_images_batch()</div>
+        <div class="pipe-step"><strong>Encoders</strong><br>CLIP · SigLIP · DINOv2</div>
         <div class="pipe-arrow">→</div>
-        <div class="pipe-step"><strong>FAISS index</strong><br>imagen · combinado</div>
+        <div class="pipe-step"><strong>FAISS indices</strong><br>6 variantes</div>
         <div class="pipe-arrow">→</div>
-        <div class="pipe-step"><strong>HuggingFace Hub</strong><br>upload</div>
+        <div class="pipe-step"><strong>metric_service.py</strong><br>Precision · NDCG · Jaccard</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><strong>HuggingFace Hub</strong><br>upload índices</div>
       </div>
     </div>
   </div>
 
-</div><!-- /diagram -->
+</div>
 
-<!-- Legend -->
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Frontend</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>API / Gateway</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>ML Core</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Índice FAISS</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>ML opcional</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Almacenamiento</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--border2)"></div>Servicio externo</div>
 </div>
 
+<!-- ═══ POPUP MODAL ═══ -->
+<div id="arch-modal">
+  <div class="arch-modal-panel">
+    <div class="arch-modal-header">
+      <div class="arch-modal-icon" id="m-icon"></div>
+      <div>
+        <div class="arch-modal-title" id="m-title"></div>
+        <div class="arch-modal-badge" id="m-badge"></div>
+      </div>
+      <button class="arch-modal-close" id="m-close">✕</button>
+    </div>
+    <div class="arch-modal-body" id="m-body"></div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  gradio: {
+    icon: '🎞', title: 'Gradio App', badge: 'Python · Gradio Blocks',
+    badgeStyle: 'background:rgba(74,158,255,.12);color:#4a9eff',
+    sections: [
+      { title: 'Ubicación', html: `
+        <div class="arch-desc">
+          <code>app/app.py</code> — montado en FastAPI en la ruta <strong>/gradio</strong><br>
+          Accesible en <strong>localhost:7860/gradio</strong> (local) y en el Space de HuggingFace.
+        </div>` },
+      { title: 'Modos de operación', html: `
+        <div class="arch-pills">
+          <div class="arch-pill blue"><strong>embedded</strong> — carga CLIP y FAISS en el mismo proceso</div>
+          <div class="arch-pill green"><strong>api</strong> — delega todas las inferencias a FastAPI via HTTP</div>
+        </div>
+        <div class="arch-desc" style="margin-top:10px">
+          Configurado por <code>RECOMMENDER_MODE</code> en <code>.env</code>.<br>
+          En producción (HF Spaces) usa modo <strong>api</strong> para evitar doble carga de CLIP.
+        </div>` },
+      { title: 'Features', html: `
+        <div class="arch-file-list">
+          <div class="arch-file"><code>📷</code><span>Upload de portada → encode CLIP → búsqueda en índice seleccionado</span></div>
+          <div class="arch-file"><code>🎛</code><span>Slider Top-K (1–20 resultados)</span></div>
+          <div class="arch-file"><code>📑</code><span>Radio selector de índice: Solo imagen / Imagen+Texto / notextimg / notextimg+combinado</span></div>
+          <div class="arch-file"><code>📊</code><span>Acordeón de métricas con tabs por modelo (Precision@K, Recall@K, NDCG@K, Jaccard, Aciertos)</span></div>
+          <div class="arch-file"><code>🖼</code><span>Galería de resultados con pósters desde TMDB y score de similitud</span></div>
+        </div>` },
+    ]
+  },
+
+  visionflix: {
+    icon: '🎬', title: 'VisionFlix Web', badge: 'Vanilla JS · HTML/CSS',
+    badgeStyle: 'background:rgba(74,158,255,.12);color:#4a9eff',
+    sections: [
+      { title: 'Páginas', html: `
+        <table class="arch-table">
+          <tr><td><code>/</code></td><td>Landing — mosaico de portadas + botón Comenzar</td></tr>
+          <tr><td><code>/app.html</code></td><td>Catálogo estilo Netflix con mock data de TMDB</td></tr>
+          <tr><td><code>/metricas.html</code></td><td>Comparativa de métricas entre todos los modelos</td></tr>
+          <tr><td><code>/arquitectura.html</code></td><td>Este diagrama</td></tr>
+        </table>` },
+      { title: 'Features del catálogo', html: `
+        <div class="arch-file-list">
+          <div class="arch-file"><code>🎥</code><span>Filas scrolleables por género y categoría</span></div>
+          <div class="arch-file"><code>🔍</code><span>Búsqueda por título y género (filtro en tiempo real)</span></div>
+          <div class="arch-file"><code>📌</code><span>Historial de vistos persistido en localStorage</span></div>
+          <div class="arch-file"><code>🎞</code><span>Modal de detalle con "Buscar similares" → tabs dinámicos por modelo</span></div>
+          <div class="arch-file"><code>🤖</code><span>Llama a <code>POST /recommend/url/all</code> con la URL del póster TMDB</span></div>
+        </div>` },
+      { title: 'Arquitectura JS', html: `
+        <div class="arch-desc">
+          <strong>data.js</strong> — MOCK_MOVIES (30+ películas con pósters TMDB reales)<br>
+          <strong>api.js</strong> — cliente HTTP con modo mock y modo real (BASE_URL relativo al origen)<br>
+          <strong>app.js</strong> — renderizado, modal, búsqueda, historial
+        </div>` },
+    ]
+  },
+
+  fastapi: {
+    icon: '⚡', title: 'FastAPI — api.py', badge: 'uvicorn · puerto 7860',
+    badgeStyle: 'background:rgba(229,9,20,.12);color:#e50914',
+    sections: [
+      { title: 'Endpoints de recomendación', html: `
+        <table class="arch-table">
+          <tr><td><span class="method-post">POST</span><code>/recommend/image</code></td><td>Upload de imagen, parámetros: top_k, combined, model</td></tr>
+          <tr><td><span class="method-post">POST</span><code>/recommend/text</code></td><td>Query de texto, parámetros: query, top_k, combined, model</td></tr>
+          <tr><td><span class="method-post">POST</span><code>/recommend/url/both</code></td><td>URL de imagen → encode CLIP → 2 índices (image + combined)</td></tr>
+          <tr><td><span class="method-post">POST</span><code>/recommend/url/all</code></td><td>URL de imagen → todos los modelos disponibles → <code>{models: [{key, label, results}]}</code></td></tr>
+        </table>` },
+      { title: 'Endpoints de métricas', html: `
+        <table class="arch-table">
+          <tr><td><span class="method-get">GET</span><code>/metrics</code></td><td>CLIP solo imagen</td></tr>
+          <tr><td><span class="method-get">GET</span><code>/metrics/combined</code></td><td>CLIP imagen+texto</td></tr>
+          <tr><td><span class="method-get">GET</span><code>/metrics/notextimg</code></td><td>CLIP sin textimg</td></tr>
+          <tr><td><span class="method-get">GET</span><code>/metrics/notextimg/combined</code></td><td>CLIP sin textimg combinado</td></tr>
+          <tr><td><span class="method-get">GET</span><code>/metrics/siglip</code></td><td>SigLIP (opcional)</td></tr>
+          <tr><td><span class="method-get">GET</span><code>/metrics/dinov2</code></td><td>DINOv2 (opcional)</td></tr>
+        </table>` },
+      { title: 'Rutas adicionales', html: `
+        <div class="arch-pills">
+          <div class="arch-pill"><strong>/gradio</strong> → Gradio ASGI montado con gr.mount_gradio_app</div>
+          <div class="arch-pill"><strong>/</strong> → StaticFiles de webpage/ (html=True)</div>
+          <div class="arch-pill"><strong>/docs</strong> → Swagger UI automático</div>
+          <div class="arch-pill"><strong>/health</strong> → status check</div>
+        </div>` },
+      { title: 'Deployment', html: `
+        <div class="arch-desc">
+          <strong>Local:</strong> <code>python app.py</code> → uvicorn en <code>0.0.0.0:7860</code><br>
+          <strong>HF Spaces:</strong> <code>sdk: docker</code> → Dockerfile con <code>python:3.11-slim</code><br>
+          CORS abierto (<code>allow_origins=["*"]</code>) para consumo desde la webpage.
+        </div>` },
+    ]
+  },
+
+  clip: {
+    icon: '🧠', title: 'CLIPEncoder', badge: 'openai/clip-vit-base-patch32',
+    badgeStyle: 'background:rgba(168,85,247,.12);color:#a855f7',
+    sections: [
+      { title: 'Modelo', html: `
+        <div class="arch-desc">
+          <strong>openai/clip-vit-base-patch32</strong> — Vision Transformer (ViT-B/32)<br>
+          Vectores de <strong>512 dimensiones</strong>, normalizados L2 para cosine similarity via inner product.<br>
+          Cargado una sola vez al iniciar via <code>CLIPProcessor</code> + <code>CLIPModel</code> de HuggingFace Transformers.
+        </div>` },
+      { title: 'Métodos', html: `
+        <table class="arch-table">
+          <tr><td><code>encode_image(path)</code></td><td>Abre imagen con PIL, procesa, retorna ndarray 512-dim</td></tr>
+          <tr><td><code>encode_text(text)</code></td><td>Tokeniza con max_length=77, retorna ndarray 512-dim</td></tr>
+          <tr><td><code>encode_images_batch(paths, batch_size)</code></td><td>Batch encoding para el pipeline offline</td></tr>
+        </table>` },
+      { title: 'Índices CLIP disponibles', html: `
+        <div class="arch-file-list">
+          <div class="arch-file"><code>faiss.index</code><span>Solo embedding de imagen</span></div>
+          <div class="arch-file"><code>faiss_combined.index</code><span>(encode_image + encode_text) / 2, renormalizado</span></div>
+          <div class="arch-file"><code>faiss_notextimg.index</code><span>Imagen sin las películas con texto en el póster</span></div>
+          <div class="arch-file"><code>faiss_notextimg_combined.index</code><span>Combinado sin textimg</span></div>
+        </div>` },
+    ]
+  },
+
+  siglip: {
+    icon: '🔬', title: 'SigLIPEncoder', badge: 'opcional · google/siglip-base-patch16-224',
+    badgeStyle: 'background:rgba(45,212,191,.1);color:#2dd4bf',
+    sections: [
+      { title: 'Modelo', html: `
+        <div class="arch-desc">
+          <strong>google/siglip-base-patch16-224</strong> — Sigmoid Loss for Language-Image Pre-training<br>
+          Vectores de <strong>768 dimensiones</strong>. Entrenado con sigmoid loss en lugar de softmax contrastivo (CLIP).<br>
+          Se carga <em>solo si</em> <code>data/processed/faiss_siglip.index</code> existe en disco.
+        </div>` },
+      { title: 'Diferencia con CLIP', html: `
+        <div class="arch-desc">
+          SigLIP usa una función de pérdida sigmoid que escala mejor con batch sizes grandes y
+          no requiere que todos los pares negativos estén en el mismo batch.<br><br>
+          Dimensiones mayores (768 vs 512) → representaciones más ricas pero mayor costo de memoria.
+        </div>` },
+      { title: 'Limitaciones', html: `
+        <div class="arch-pills">
+          <div class="arch-pill orange">Solo búsqueda por imagen (encode_text no implementado en los endpoints)</div>
+          <div class="arch-pill orange">Carga condicional — si el índice no existe, el encoder no se instancia</div>
+        </div>` },
+    ]
+  },
+
+  dinov2: {
+    icon: '🦕', title: 'DINOv2Encoder', badge: 'opcional · facebook/dinov2-large',
+    badgeStyle: 'background:rgba(45,212,191,.1);color:#2dd4bf',
+    sections: [
+      { title: 'Modelo', html: `
+        <div class="arch-desc">
+          <strong>facebook/dinov2-large</strong> — Self-supervised Vision Transformer<br>
+          Vectores de <strong>1024 dimensiones</strong>. Entrenado con DINO v2 sin supervisión de texto.<br>
+          Se carga <em>solo si</em> <code>data/processed/faiss_dinov2.index</code> existe en disco.
+        </div>` },
+      { title: 'Diferencia con CLIP', html: `
+        <div class="arch-desc">
+          DINOv2 es un modelo puramente visual (sin contrastive learning con texto).<br>
+          Captura mejor las características visuales de bajo nivel (texturas, formas, colores)
+          que CLIP, que está más orientado a la semántica imagen-texto.<br><br>
+          Resultado: recomendaciones más visuales y menos semánticas.
+        </div>` },
+      { title: 'Limitaciones', html: `
+        <div class="arch-pills">
+          <div class="arch-pill orange">No soporta búsqueda por texto (modelo puramente visual)</div>
+          <div class="arch-pill orange">Mayor costo de memoria que CLIP (1024 dims vs 512)</div>
+          <div class="arch-pill orange">Carga condicional — si el índice no existe, el encoder no se instancia</div>
+        </div>` },
+    ]
+  },
+
+  processed: {
+    icon: '💾', title: 'data/processed/', badge: 'Índices FAISS · Local FS',
+    badgeStyle: 'background:rgba(70,211,105,.1);color:#46d369',
+    sections: [
+      { title: 'Índices FAISS', html: `
+        <div class="arch-file-list">
+          <div class="arch-file"><code>faiss.index</code><span>CLIP imagen · IndexFlatIP · 512 dims · ~70k vectores</span></div>
+          <div class="arch-file"><code>faiss_combined.index</code><span>CLIP imagen+texto · IndexFlatIP · 512 dims</span></div>
+          <div class="arch-file"><code>faiss_notextimg.index</code><span>CLIP sin textimg · IndexFlatIP · 512 dims</span></div>
+          <div class="arch-file"><code>faiss_notextimg_combined.index</code><span>CLIP notextimg combinado</span></div>
+          <div class="arch-file"><code>faiss_siglip.index</code><span>SigLIP · IndexFlatIP · 768 dims (opcional)</span></div>
+          <div class="arch-file"><code>faiss_dinov2.index</code><span>DINOv2 · IndexFlatIP · 1024 dims (opcional)</span></div>
+        </div>` },
+      { title: 'Metadatos', html: `
+        <div class="arch-file-list">
+          <div class="arch-file"><code>index_metadata.csv</code><span>title, overview, genres, tmdb_poster_url, movieId</span></div>
+          <div class="arch-file"><code>index_metadata_combined.csv</code><span>ídem para índice combinado</span></div>
+          <div class="arch-file"><code>index_metadata_notextimg*.csv</code><span>ídem para variantes notextimg</span></div>
+        </div>` },
+      { title: 'Descarga automática', html: `
+        <div class="arch-desc">
+          Al iniciar <code>app.py</code>, si los índices base (<code>faiss.index</code>, <code>faiss_combined.index</code>)
+          no existen, se descargan automáticamente desde HuggingFace Hub via <code>HfFileSystem</code>.<br><br>
+          Los índices opcionales (SigLIP, DINOv2) deben generarse manualmente con el pipeline offline.
+        </div>` },
+    ]
+  },
+
+  metrics: {
+    icon: '📊', title: 'data/metrics/', badge: 'Métricas JSON · Local FS',
+    badgeStyle: 'background:rgba(70,211,105,.1);color:#46d369',
+    sections: [
+      { title: 'Archivos', html: `
+        <div class="arch-file-list">
+          <div class="arch-file"><code>metrics_clips.json</code><span>CLIP solo imagen</span></div>
+          <div class="arch-file"><code>metrics_clips_combined.json</code><span>CLIP imagen+texto</span></div>
+          <div class="arch-file"><code>metrics_clip_notextimg.json</code><span>CLIP sin textimg</span></div>
+          <div class="arch-file"><code>metrics_clip_notextimg_combined.json</code><span>CLIP notextimg combinado</span></div>
+          <div class="arch-file"><code>metrics_siglip.json</code><span>SigLIP (opcional)</span></div>
+          <div class="arch-file"><code>metrics_dinov2.json</code><span>DINOv2 (opcional)</span></div>
+        </div>` },
+      { title: 'Estructura JSON', html: `
+        <table class="arch-table">
+          <tr><td><code>precision</code></td><td>Precision@K — fracción de K recomendaciones relevantes</td></tr>
+          <tr><td><code>recall</code></td><td>Recall@K — fracción de películas relevantes recuperadas</td></tr>
+          <tr><td><code>ndcg</code></td><td>NDCG@K — calidad del ranking (posición importa)</td></tr>
+          <tr><td><code>gender_coherence</code></td><td>Jaccard promedio entre géneros de query y recomendaciones</td></tr>
+          <tr><td><code>aciertos</code></td><td>Conteo absoluto de recomendaciones que superan umbral Jaccard</td></tr>
+          <tr><td><code>aciertos_pct</code></td><td>aciertos / (n_samples × K)</td></tr>
+        </table>` },
+      { title: 'Generación', html: `
+        <div class="arch-desc">
+          Calculadas por <code>src/metrics/metric_service.py</code> sobre <strong>500 muestras aleatorias</strong>
+          con <strong>umbral Jaccard = 0.5</strong> y <strong>K = 5</strong>.<br><br>
+          <code>python src/metrics/metric_service.py</code> — genera métricas CLIP<br>
+          <code>python src/metrics/metric_service.py --combined</code> — métricas combinadas<br>
+          <code>python src/metrics/metric_service.py --model siglip</code> — métricas SigLIP
+        </div>` },
+    ]
+  },
+
+  hfhub: {
+    icon: '🤗', title: 'HuggingFace Hub', badge: 'HfFileSystem · Bucket privado',
+    badgeStyle: 'background:rgba(70,211,105,.1);color:#46d369',
+    sections: [
+      { title: 'Bucket', html: `
+        <div class="arch-desc">
+          <strong>buckets/carbonecar/recomendador-peliculas-index</strong><br><br>
+          Contiene los índices FAISS y CSVs de metadatos. Se accede via <code>HfFileSystem</code>
+          de la librería <code>huggingface_hub</code>.
+        </div>` },
+      { title: 'Flujo de descarga', html: `
+        <div class="arch-desc">
+          Al arrancar <code>python app.py</code>, se verifica si los 4 archivos base existen localmente.
+          Si falta alguno, se descargan del bucket antes de importar <code>api.py</code>
+          (que instancia <code>MovieRecommender</code> y carga FAISS).
+        </div>` },
+      { title: 'Deploy en HF Spaces', html: `
+        <div class="arch-desc">
+          El Space <strong>carbonecar/recomendador-peliculas</strong> usa <code>sdk: docker</code>.<br>
+          GitHub Actions hace push a HF Spaces en cada commit a <code>main</code> o <code>prepro</code>
+          via el workflow <code>.github/workflows/deploy_hf.yml</code>.
+        </div>` },
+    ]
+  },
+
+  tmdb: {
+    icon: '🎥', title: 'TMDB API', badge: 'The Movie Database · Externo',
+    badgeStyle: 'background:rgba(255,255,255,.06);color:#777',
+    sections: [
+      { title: 'Uso en pipeline offline', html: `
+        <div class="arch-desc">
+          <code>src/data/download_posters.py</code> usa la API de TMDB para obtener:<br>
+          pósters de películas, sinopsis, géneros, año de lanzamiento.<br>
+          Requiere <code>TMDB_API_KEY</code> en <code>.env</code>.
+        </div>` },
+      { title: 'Uso en pipeline online', html: `
+        <div class="arch-desc">
+          Los endpoints <code>POST /recommend/url/both</code> y <code>POST /recommend/url/all</code>
+          reciben una URL de póster de TMDB (<code>image.tmdb.org/t/p/w500/...</code>)
+          y la descargan <strong>server-side</strong> con <code>requests</code>.<br><br>
+          <strong>¿Por qué server-side?</strong> TMDB bloquea <code>fetch()</code> desde el browser
+          (no incluye cabecera <code>Access-Control-Allow-Origin</code>). El backend no tiene esa restricción.
+        </div>` },
+      { title: 'URLs de pósters', html: `
+        <div class="arch-pills">
+          <div class="arch-pill"><code>w342</code> — landing page (carga rápida)</div>
+          <div class="arch-pill"><code>w500</code> — cards y recomendaciones</div>
+          <div class="arch-pill"><code>w1280</code> — hero banner y modal</div>
+        </div>` },
+    ]
+  },
+};
+
+const modal   = document.getElementById('arch-modal');
+const mIcon   = document.getElementById('m-icon');
+const mTitle  = document.getElementById('m-title');
+const mBadge  = document.getElementById('m-badge');
+const mBody   = document.getElementById('m-body');
+
+function openNode(key) {
+  const d = NODES[key];
+  if (!d) return;
+  mIcon.textContent  = d.icon;
+  mTitle.textContent = d.title;
+  mBadge.textContent = d.badge;
+  mBadge.style.cssText = d.badgeStyle;
+  mBody.innerHTML = d.sections.map(s => `
+    <div class="arch-section">
+      <div class="arch-section-title">${s.title}</div>
+      ${s.html}
+    </div>`).join('');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('m-close').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+document.querySelectorAll('[data-node]').forEach(el => {
+  el.addEventListener('click', () => openNode(el.dataset.node));
+});
+</script>
 </body>
 </html>

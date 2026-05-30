@@ -12,10 +12,18 @@ from pathlib import Path
 # ── Descarga índices desde HF Hub antes de importar api (que carga MovieRecommender) ──
 _BUCKET = "buckets/carbonecar/recomendador-peliculas-index"
 _REQUIRED = [
-    ("data/processed/faiss.index",                    "faiss.index"),
-    ("data/processed/index_metadata.csv",             "index_metadata.csv"),
-    ("data/processed/faiss_combined.index",           "faiss_combined.index"),
-    ("data/processed/index_metadata_combined.csv",    "index_metadata_combined.csv"),
+    ("data/processed/faiss.index",                         "faiss.index"),
+    ("data/processed/index_metadata.csv",                  "index_metadata.csv"),
+    ("data/processed/faiss_combined.index",                "faiss_combined.index"),
+    ("data/processed/index_metadata_combined.csv",         "index_metadata_combined.csv"),
+    ("data/processed/faiss_notextimg.index",               "faiss_notextimg.index"),
+    ("data/processed/index_metadata_notextimg.csv",        "index_metadata_notextimg.csv"),
+    ("data/processed/faiss_notextimg_combined.index",      "faiss_notextimg_combined.index"),
+    ("data/processed/index_metadata_notextimg_combined.csv","index_metadata_notextimg_combined.csv"),
+    ("data/processed/faiss_siglip.index",                  "faiss_siglip.index"),
+    ("data/processed/index_metadata_siglip.csv",           "index_metadata_siglip.csv"),
+    ("data/processed/faiss_dinov2.index",                  "faiss_dinov2.index"),
+    ("data/processed/index_metadata_dinov2.csv",           "index_metadata_dinov2.csv"),
 ]
 Path("data/processed").mkdir(parents=True, exist_ok=True)
 if any(not Path(local).exists() for local, _ in _REQUIRED):
