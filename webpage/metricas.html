@@ -184,6 +184,13 @@
     .model-card { cursor: pointer; }
     .model-card:hover { transform: translateY(-2px); }
 
+    .def-card { cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .2s; }
+    .def-card:hover {
+      border-color: rgba(229,9,20,.35);
+      box-shadow: 0 0 20px rgba(229,9,20,.08);
+      transform: translateY(-2px);
+    }
+
     /* ── Modal ── */
     #metrics-modal {
       position: fixed; inset: 0; z-index: 2000;
@@ -326,7 +333,20 @@
       <p class="definitions-sub">Cómo se calcula cada valor · umbral Jaccard = 0.5</p>
       <div class="def-grid">
 
-        <div class="def-card">
+
+        <div class="def-card" data-def="coherence">
+          <div class="def-card-title">
+            Coherencia de género <span class="def-tag">similitud</span>
+          </div>
+          <div class="def-card-body">
+            <strong>Jaccard promedio</strong> entre los géneros de la película
+            consultada y los géneros de cada recomendación.<br><br>
+            <strong>J(A,B) = |A ∩ B| / |A ∪ B|</strong><br><br>
+            Valor entre 0 (sin géneros en común) y 1 (géneros idénticos).
+          </div>
+        </div>
+
+        <div class="def-card" data-def="precision">
           <div class="def-card-title">
             Precision@K <span class="def-tag">ranking</span>
           </div>
@@ -337,7 +357,7 @@
           </div>
         </div>
 
-        <div class="def-card">
+        <div class="def-card" data-def="recall">
           <div class="def-card-title">
             Recall@K <span class="def-tag">cobertura</span>
           </div>
@@ -349,7 +369,7 @@
           </div>
         </div>
 
-        <div class="def-card">
+        <div class="def-card" data-def="ndcg">
           <div class="def-card-title">
             NDCG@K <span class="def-tag">calidad de ranking</span>
           </div>
@@ -363,19 +383,7 @@
           </div>
         </div>
 
-        <div class="def-card">
-          <div class="def-card-title">
-            Coherencia de género <span class="def-tag">similitud</span>
-          </div>
-          <div class="def-card-body">
-            <strong>Jaccard promedio</strong> entre los géneros de la película
-            consultada y los géneros de cada recomendación.<br><br>
-            <strong>J(A,B) = |A ∩ B| / |A ∪ B|</strong><br><br>
-            Valor entre 0 (sin géneros en común) y 1 (géneros idénticos).
-          </div>
-        </div>
-
-        <div class="def-card">
+        <div class="def-card" data-def="aciertos">
           <div class="def-card-title">
             Aciertos <span class="def-tag">absoluto</span>
           </div>
@@ -387,7 +395,7 @@
           </div>
         </div>
 
-        <div class="def-card">
+        <div class="def-card" data-def="jaccard">
           <div class="def-card-title">
             Umbral Jaccard <span class="def-tag">parámetro</span>
           </div>
@@ -594,6 +602,148 @@
       document.getElementById("metrics-modal").classList.remove("open");
       document.body.style.overflow = "";
     }
+
+    const DEFS = {
+      precision: {
+        icon: "🎯", title: "Precision@K", badge: "ranking",
+        badgeStyle: "background:rgba(229,9,20,.15);color:#e50914",
+        body: `
+          <div class="mmodal-row-plain" style="flex-direction:column;align-items:flex-start;gap:10px">
+            <p style="font-size:.95rem;line-height:1.8;color:#ccc">
+              De las <strong style="color:#fff">K películas recomendadas</strong>, fracción que supera
+              el umbral de similitud de género (Jaccard ≥ 0.5).<br><br>
+              Mide <strong style="color:#fff">cuántas de las K sugerencias son relevantes</strong> para la consulta,
+              sin importar en qué posición aparecen.
+            </p>
+            <div style="background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:8px;padding:16px 20px;width:100%;text-align:center;font-size:1.1rem;letter-spacing:.04em">
+              Precision@K = <strong style="color:#4a9eff">relevantes en K</strong> / <strong style="color:#fff">K</strong>
+            </div>
+            <p style="font-size:.82rem;color:#666">
+              Valor entre 0 y 1. Un valor de 0.4 significa que 4 de cada 10 recomendaciones comparten géneros con la consulta.
+            </p>
+          </div>`
+      },
+      recall: {
+        icon: "📡", title: "Recall@K", badge: "cobertura",
+        badgeStyle: "background:rgba(168,85,247,.12);color:#a855f7",
+        body: `
+          <div class="mmodal-row-plain" style="flex-direction:column;align-items:flex-start;gap:10px">
+            <p style="font-size:.95rem;line-height:1.8;color:#ccc">
+              De <strong style="color:#fff">todas las películas del dataset</strong> con similitud de
+              género ≥ umbral respecto a la consulta, fracción que aparece entre las K recomendaciones.<br><br>
+              Mide <strong style="color:#fff">cobertura</strong>: si hay 50 películas relevantes en el corpus,
+              ¿cuántas logró recuperar el sistema en las top-K?
+            </p>
+            <div style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;padding:16px 20px;width:100%;text-align:center;font-size:1.1rem;letter-spacing:.04em">
+              Recall@K = <strong style="color:#a855f7">relevantes en K</strong> / <strong style="color:#fff">total relevantes en corpus</strong>
+            </div>
+            <p style="font-size:.82rem;color:#666">
+              Complementa Precision@K: un sistema puede tener alta precision pero bajo recall si sólo recupera una fracción de lo relevante.
+            </p>
+          </div>`
+      },
+      ndcg: {
+        icon: "📈", title: "NDCG@K", badge: "calidad de ranking",
+        badgeStyle: "background:rgba(70,211,105,.1);color:#46d369",
+        body: `
+          <div class="mmodal-row-plain" style="flex-direction:column;align-items:flex-start;gap:12px">
+            <p style="font-size:.95rem;line-height:1.8;color:#ccc">
+              <strong style="color:#fff">Normalized Discounted Cumulative Gain.</strong> A diferencia de Precision@K,
+              penaliza las recomendaciones relevantes que aparecen en posiciones más bajas del ranking.<br><br>
+              Una recomendación relevante en posición 1 contribuye más que la misma en posición K.
+              Se normaliza entre 0 y 1 usando el ranking ideal (IDCG).
+            </p>
+            <div style="background:rgba(0,0,0,.3);border-radius:8px;padding:14px;width:100%;text-align:center">
+              <img src="/DCG.png" alt="Fórmula DCG" style="max-width:100%;height:auto;opacity:.9">
+            </div>
+            <p style="font-size:.82rem;color:#666">
+              NDCG = DCG / IDCG, donde IDCG es el DCG del ranking ideal (todas las relevantes al principio). Valor entre 0 y 1.
+            </p>
+          </div>`
+      },
+      coherence: {
+        icon: "🎭", title: "Coherencia de género", badge: "similitud",
+        badgeStyle: "background:rgba(245,166,35,.12);color:#f5a623",
+        body: `
+          <div class="mmodal-row-plain" style="flex-direction:column;align-items:flex-start;gap:10px">
+            <p style="font-size:.95rem;line-height:1.8;color:#ccc">
+              <strong style="color:#fff">Jaccard promedio</strong> entre los géneros de la película
+              consultada y los géneros de cada recomendación.<br><br>
+              Es una métrica <strong style="color:#fff">continua</strong> (no binaria): captura similitud parcial
+              de géneros aunque no supere el umbral de 0.5.
+            </p>
+            <div style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);border-radius:8px;padding:16px 20px;width:100%;text-align:center;font-size:1.1rem">
+              J(A,B) = <strong style="color:#f5a623">|A ∩ B|</strong> / <strong style="color:#fff">|A ∪ B|</strong>
+            </div>
+            <p style="font-size:.82rem;color:#666">
+              Valor entre 0 (sin géneros en común) y 1 (géneros idénticos). Se promedia sobre las K recomendaciones de cada consulta.
+            </p>
+          </div>`
+      },
+      aciertos: {
+        icon: "✅", title: "Aciertos", badge: "absoluto",
+        badgeStyle: "background:rgba(70,211,105,.1);color:#46d369",
+        body: `
+          <div class="mmodal-row-plain" style="flex-direction:column;align-items:flex-start;gap:10px">
+            <p style="font-size:.95rem;line-height:1.8;color:#ccc">
+              Conteo <strong style="color:#fff">absoluto</strong> de recomendaciones individuales que superan
+              el umbral Jaccard de 0.5, sobre el total de recomendaciones evaluadas.<br><br>
+              Complementa Precision@K: mientras Precision es un ratio (0–1), Aciertos es el número bruto de recomendaciones correctas.
+            </p>
+            <div style="background:rgba(70,211,105,.07);border:1px solid rgba(70,211,105,.2);border-radius:8px;padding:16px 20px;width:100%;text-align:center;font-size:1.05rem">
+              Aciertos = Σ(recomendaciones con Jaccard ≥ 0.5)<br>
+              <span style="color:#666;font-size:.85rem">sobre <strong style="color:#fff">500 muestras × K</strong> recomendaciones</span>
+            </div>
+            <p style="font-size:.82rem;color:#666">
+              Ejemplo: si K=5 y 500 muestras → 2500 recomendaciones totales evaluadas. Un valor de 853 equivale a Precision ≈ 0.34.
+            </p>
+          </div>`
+      },
+      jaccard: {
+        icon: "⚖️", title: "Umbral Jaccard", badge: "parámetro",
+        badgeStyle: "background:rgba(255,255,255,.07);color:#888",
+        body: `
+          <div class="mmodal-row-plain" style="flex-direction:column;align-items:flex-start;gap:10px">
+            <p style="font-size:.95rem;line-height:1.8;color:#ccc">
+              Valor de corte para decidir si una recomendación es <strong style="color:#fff">relevante</strong>.
+              Fijado en <strong style="color:#e50914">0.5</strong>: al menos la mitad de la unión de géneros
+              debe estar en la intersección.<br><br>
+              Determina el nivel de exigencia de la evaluación.
+            </p>
+            <div style="background:rgba(229,9,20,.07);border:1px solid rgba(229,9,20,.2);border-radius:8px;padding:16px 20px;width:100%;text-align:center;font-size:1.05rem">
+              Jaccard(A,B) ≥ <strong style="color:#e50914">0.5</strong> → recomendación relevante
+            </div>
+            <div style="display:flex;gap:10px;width:100%">
+              <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:12px;font-size:.8rem;color:#888">
+                <strong style="color:#ccc;display:block;margin-bottom:4px">Umbral bajo (0.2)</strong>
+                Más recomendaciones se consideran relevantes. Métricas más altas pero menos exigentes.
+              </div>
+              <div style="flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:12px;font-size:.8rem;color:#888">
+                <strong style="color:#ccc;display:block;margin-bottom:4px">Umbral alto (0.8)</strong>
+                Sólo recomendaciones muy similares pasan. Métricas más bajas pero más estrictas.
+              </div>
+            </div>
+          </div>`
+      },
+    };
+
+    function openDefModal(key) {
+      const d = DEFS[key];
+      if (!d) return;
+      document.getElementById("mm-icon").textContent  = d.icon;
+      document.getElementById("mm-title").textContent = d.title;
+      document.getElementById("mm-desc").textContent  = "";
+      const badge = document.getElementById("mm-badge");
+      badge.textContent = d.badge;
+      badge.style.cssText = d.badgeStyle;
+      document.getElementById("mm-body").innerHTML = d.body;
+      document.getElementById("metrics-modal").classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    document.querySelectorAll(".def-card[data-def]").forEach(card => {
+      card.addEventListener("click", () => openDefModal(card.dataset.def));
+    });
 
     document.getElementById("mm-close").addEventListener("click", closeModal);
     document.getElementById("metrics-modal").addEventListener("click", e => {
