@@ -8,13 +8,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.recommender import MovieRecommender
+from src.index.faiss_index import MovieIndex
 
 METRICS_PATH          = Path("data/metrics/metrics_clips.json")
 METRICS_COMBINED_PATH = Path("data/metrics/metrics_clips_combined.json")
 
-METRICS_SIGLIP_PATH          = Path("data/metrics/metrics_siglip.json")
-METRICS_SIGLIP_COMBINED_PATH = Path("data/metrics/metrics_siglip_combined.json")
-METRICS_DINOV2_PATH          = Path("data/metrics/metrics_dinov2.json")
+METRICS_SIGLIP_PATH             = Path("data/metrics/metrics_siglip.json")
+METRICS_SIGLIP_COMBINED_PATH    = Path("data/metrics/metrics_siglip_combined.json")
+METRICS_DINOV2_PATH             = Path("data/metrics/metrics_dinov2.json")
+METRICS_NOTEXTIMG_PATH          = Path("data/metrics/metrics_clip_notextimg.json")
+METRICS_NOTEXTIMG_COMBINED_PATH = Path("data/metrics/metrics_clip_notextimg_combined.json")
 
 app = FastAPI(title="Recomendador de Películas", version="1.0")
 
@@ -26,6 +29,23 @@ app.add_middleware(
 )
 
 recommender = MovieRecommender()
+
+# Índices opcionales no-textimg (mismo encoder CLIP, índice distinto)
+_NOTEXTIMG_INDEX_PATH    = Path("data/processed/faiss_notextimg.index")
+_NOTEXTIMG_META_PATH     = Path("data/processed/index_metadata_notextimg.csv")
+_NOTEXTIMG_COMB_PATH     = Path("data/processed/faiss_notextimg_combined.index")
+_NOTEXTIMG_COMB_META     = Path("data/processed/index_metadata_notextimg_combined.csv")
+
+_notextimg_index = None
+if _NOTEXTIMG_INDEX_PATH.exists() and _NOTEXTIMG_META_PATH.exists():
+    _notextimg_index = MovieIndex()
+    _notextimg_index.load(str(_NOTEXTIMG_INDEX_PATH), str(_NOTEXTIMG_META_PATH))
+
+_notextimg_combined_index = None
+if _NOTEXTIMG_COMB_PATH.exists() and _NOTEXTIMG_COMB_META.exists():
+    _notextimg_combined_index = MovieIndex()
+    _notextimg_combined_index.load(str(_NOTEXTIMG_COMB_PATH), str(_NOTEXTIMG_COMB_META))
+
 
 
 class Movie(BaseModel):
@@ -67,6 +87,14 @@ class BothResponse(BaseModel):
     image:    List[Movie]
     combined: List[Movie]
 
+class ModelResult(BaseModel):
+    key:     str
+    label:   str
+    results: List[Movie]
+
+class AllResponse(BaseModel):
+    models: List[ModelResult]
+
 
 def _download_to_tmp(url: str) -> str:
     import requests as _req
@@ -81,7 +109,6 @@ def _download_to_tmp(url: str) -> str:
 
 @app.post("/recommend/url/both", response_model=BothResponse)
 def recommend_by_url_both(body: UrlRequest, top_k: int = 5):
-    """Encode the image once, then search both indices — avoids double CLIP inference."""
     tmp_path = _download_to_tmp(body.url)
     try:
         vector      = recommender.encoder.encode_image(tmp_path)
@@ -89,10 +116,40 @@ def recommend_by_url_both(body: UrlRequest, top_k: int = 5):
         combined_df = recommender.index_combined.search(vector, top_k)
     finally:
         Path(tmp_path).unlink(missing_ok=True)
-    return BothResponse(
-        image=    _to_movie_list(img_df),
-        combined= _to_movie_list(combined_df),
-    )
+    return BothResponse(image=_to_movie_list(img_df), combined=_to_movie_list(combined_df))
+
+
+@app.post("/recommend/url/all", response_model=AllResponse)
+def recommend_by_url_all(body: UrlRequest, top_k: int = 5):
+    """Encode once per encoder, search all available indices."""
+    tmp_path = _download_to_tmp(body.url)
+    models = []
+    try:
+        # CLIP — un solo encoding para todos los índices CLIP
+        clip_vec = recommender.encoder.encode_image(tmp_path)
+        models.append(ModelResult(key="clip-image",    label="Solo imagen (CLIP)",
+                                  results=_to_movie_list(recommender.index.search(clip_vec, top_k))))
+        models.append(ModelResult(key="clip-combined", label="Imagen + Texto (CLIP)",
+                                  results=_to_movie_list(recommender.index_combined.search(clip_vec, top_k))))
+        if _notextimg_index:
+            models.append(ModelResult(key="notextimg", label="CLIP sin textimg",
+                                      results=_to_movie_list(_notextimg_index.search(clip_vec, top_k))))
+        if _notextimg_combined_index:
+            models.append(ModelResult(key="notextimg-combined", label="CLIP sin textimg + Texto",
+                                      results=_to_movie_list(_notextimg_combined_index.search(clip_vec, top_k))))
+        # SigLIP
+        if recommender.siglip_encoder and recommender.siglip_index:
+            siglip_vec = recommender.siglip_encoder.encode_image(tmp_path)
+            models.append(ModelResult(key="siglip", label="SigLIP",
+                                      results=_to_movie_list(recommender.siglip_index.search(siglip_vec, top_k))))
+        # DINOv2
+        if recommender.dinov2_encoder and recommender.dinov2_index:
+            dino_vec = recommender.dinov2_encoder.encode_image(tmp_path)
+            models.append(ModelResult(key="dinov2", label="DINOv2",
+                                      results=_to_movie_list(recommender.dinov2_index.search(dino_vec, top_k))))
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+    return AllResponse(models=models)
 @app.get("/metrics/siglip")
 def get_metrics_siglip():
     if not METRICS_SIGLIP_PATH.exists():
@@ -112,6 +169,20 @@ def get_metrics_dinov2():
     if not METRICS_DINOV2_PATH.exists():
         raise HTTPException(status_code=404, detail="Métricas DINOv2 no disponibles. Ejecutar src/metrics/metric_service.py --model dinov2 primero.")
     return json.loads(METRICS_DINOV2_PATH.read_text())
+
+
+@app.get("/metrics/notextimg")
+def get_metrics_notextimg():
+    if not METRICS_NOTEXTIMG_PATH.exists():
+        raise HTTPException(status_code=404, detail="Métricas CLIP no-textimg no disponibles.")
+    return json.loads(METRICS_NOTEXTIMG_PATH.read_text())
+
+
+@app.get("/metrics/notextimg/combined")
+def get_metrics_notextimg_combined():
+    if not METRICS_NOTEXTIMG_COMBINED_PATH.exists():
+        raise HTTPException(status_code=404, detail="Métricas CLIP no-textimg combinado no disponibles.")
+    return json.loads(METRICS_NOTEXTIMG_COMBINED_PATH.read_text())
 
 
 @app.post("/recommend/image", response_model=RecommendResponse)

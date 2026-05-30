@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Métricas — VisionFlix</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body { padding-top: var(--nav-h); min-height: 100vh; }
+
+    .metrics-page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 4% 80px;
+    }
+
+    .page-header {
+      margin-bottom: 40px;
+    }
+    .page-header h1 {
+      font-size: 2rem; font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .page-header p {
+      font-size: .9rem; color: var(--text-dim);
+    }
+
+    /* ── Model cards grid ── */
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .model-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .model-card:hover {
+      border-color: rgba(255,255,255,.16);
+      box-shadow: 0 4px 24px rgba(0,0,0,.5);
+    }
+
+    .model-card-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .model-icon {
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .model-name {
+      font-size: 1rem; font-weight: 800;
+    }
+    .model-desc {
+      font-size: .75rem; color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .model-badge {
+      margin-left: auto; flex-shrink: 0;
+      font-size: .62rem; letter-spacing: .08em;
+      text-transform: uppercase; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .badge-clip     { background: rgba(74,158,255,.12); color: #4a9eff; }
+    .badge-combined { background: rgba(168,85,247,.12); color: #a855f7; }
+    .badge-siglip   { background: rgba(70,211,105,.12); color: #46d369; }
+    .badge-dinov2   { background: rgba(245,166,35,.12); color: #f5a623; }
+
+    /* ── Metrics table ── */
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .metrics-table tr {
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .metrics-table tr:last-child { border-bottom: none; }
+
+    .metrics-table td {
+      padding: 11px 20px;
+      font-size: .85rem;
+    }
+    .metrics-table td:first-child { color: var(--text-dim); }
+    .metrics-table td:last-child  { text-align: right; font-weight: 700; }
+
+    .bar-cell { padding: 10px 20px; }
+    .bar-wrap {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .bar-label { font-size: .82rem; color: var(--text-dim); width: 110px; flex-shrink: 0; }
+    .bar-track {
+      flex: 1; height: 6px;
+      background: rgba(255,255,255,.08);
+      border-radius: 3px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 3px;
+      transition: width .6s ease;
+    }
+    .bar-value { font-size: .8rem; font-weight: 700; width: 46px; text-align: right; flex-shrink: 0; }
+
+    /* bar colors */
+    .bar-precision { background: #4a9eff; }
+    .bar-ndcg      { background: #a855f7; }
+    .bar-coherence { background: #46d369; }
+    .bar-aciertos  { background: var(--red); }
+
+    /* ── Loading / error ── */
+    .status-row {
+      padding: 24px 20px;
+      font-size: .85rem; color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* ── Summary bar ── */
+    .summary {
+      margin-bottom: 28px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px;
+      padding: 16px 24px;
+      display: flex; gap: 32px; flex-wrap: wrap;
+    }
+    .summary-item { display: flex; flex-direction: column; gap: 2px; }
+    .summary-label { font-size: .7rem; color: var(--text-dim); letter-spacing: .07em; text-transform: uppercase; }
+    .summary-val   { font-size: 1.3rem; font-weight: 900; }
+    .summary-val.best { color: #46d369; }
+
+    /* ── Definitions ── */
+    .definitions {
+      margin-top: 48px;
+    }
+    .definitions h2 {
+      font-size: 1.2rem; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .definitions-sub {
+      font-size: .83rem; color: var(--text-dim);
+      margin-bottom: 24px;
+    }
+    .def-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .def-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 8px;
+      padding: 18px 20px;
+    }
+    .def-card-title {
+      font-size: .88rem; font-weight: 700;
+      color: #fff; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .def-card-title .def-tag {
+      font-size: .6rem; letter-spacing: .08em;
+      text-transform: uppercase; font-weight: 700;
+      padding: 2px 8px; border-radius: 3px;
+      background: rgba(229,9,20,.15); color: var(--red);
+    }
+    .def-card-body {
+      font-size: .8rem; color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .def-card-body strong { color: var(--text); }
+    .def-formula {
+      margin-top: 14px;
+      background: rgba(0,0,0,.3);
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+    }
+    .def-formula img {
+      max-width: 100%; height: auto;
+      opacity: .9;
+    }
+
+    @media (max-width: 700px) {
+      .models-grid { grid-template-columns: 1fr; }
+      .def-grid    { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <a href="/app.html" class="nav-logo">VISIONFLIX</a>
+    <ul class="nav-links">
+      <li><a href="/app.html">Inicio</a></li>
+      <li><a href="/metricas.html" style="color:#fff">Métricas</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="nav-avatar" title="Usuario">U</div>
+    </div>
+  </nav>
+
+  <div class="metrics-page">
+    <div class="page-header">
+      <h1>Métricas del modelo</h1>
+      <p>Evaluación sobre 500 muestras aleatorias · umbral Jaccard = 0.5 · K = 5</p>
+    </div>
+
+    <div class="summary" id="summary" style="display:none">
+      <div class="summary-item">
+        <span class="summary-label">Mejor Precision@K</span>
+        <span class="summary-val best" id="best-precision">—</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">Mejor NDCG@K</span>
+        <span class="summary-val best" id="best-ndcg">—</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">Mejor coherencia</span>
+        <span class="summary-val best" id="best-coherence">—</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">Modelos evaluados</span>
+        <span class="summary-val" id="model-count">—</span>
+      </div>
+    </div>
+
+    <div class="models-grid" id="models-grid">
+      <div class="status-row">Cargando métricas…</div>
+    </div>
+
+    <!-- ── Definiciones ── -->
+    <div class="definitions">
+      <h2>Glosario de métricas</h2>
+      <p class="definitions-sub">Cómo se calcula cada valor · umbral Jaccard = 0.5</p>
+      <div class="def-grid">
+
+        <div class="def-card">
+          <div class="def-card-title">
+            Precision@K <span class="def-tag">ranking</span>
+          </div>
+          <div class="def-card-body">
+            De las <strong>K películas recomendadas</strong>, fracción que supera
+            el umbral de similitud de género (Jaccard ≥ 0.5).<br><br>
+            <strong>Precision@K = relevantes en K / K</strong>
+          </div>
+        </div>
+
+        <div class="def-card">
+          <div class="def-card-title">
+            Recall@K <span class="def-tag">cobertura</span>
+          </div>
+          <div class="def-card-body">
+            De <strong>todas las películas del dataset</strong> con similitud de
+            género ≥ umbral respecto a la consulta, fracción que aparece entre
+            las K recomendaciones.<br><br>
+            <strong>Recall@K = relevantes en K / total relevantes</strong>
+          </div>
+        </div>
+
+        <div class="def-card">
+          <div class="def-card-title">
+            NDCG@K <span class="def-tag">calidad de ranking</span>
+          </div>
+          <div class="def-card-body">
+            <strong>Normalized Discounted Cumulative Gain.</strong> Mide la calidad
+            del ranking: una recomendación relevante en posición 1 vale más que
+            en posición K. Normalizado entre 0 y 1 usando el ranking ideal (IDCG).
+          </div>
+          <div class="def-formula">
+            <img src="/DCG.png" alt="Fórmula DCG">
+          </div>
+        </div>
+
+        <div class="def-card">
+          <div class="def-card-title">
+            Coherencia de género <span class="def-tag">similitud</span>
+          </div>
+          <div class="def-card-body">
+            <strong>Jaccard promedio</strong> entre los géneros de la película
+            consultada y los géneros de cada recomendación.<br><br>
+            <strong>J(A,B) = |A ∩ B| / |A ∪ B|</strong><br><br>
+            Valor entre 0 (sin géneros en común) y 1 (géneros idénticos).
+          </div>
+        </div>
+
+        <div class="def-card">
+          <div class="def-card-title">
+            Aciertos <span class="def-tag">absoluto</span>
+          </div>
+          <div class="def-card-body">
+            Total de recomendaciones individuales que superan el umbral Jaccard,
+            sobre el total de recomendaciones evaluadas
+            (<strong>500 muestras × K</strong>).<br><br>
+            Complementa Precision@K con el conteo absoluto.
+          </div>
+        </div>
+
+        <div class="def-card">
+          <div class="def-card-title">
+            Umbral Jaccard <span class="def-tag">parámetro</span>
+          </div>
+          <div class="def-card-body">
+            Valor de corte para decidir si una recomendación es
+            <strong>relevante</strong>. Fijado en <strong>0.5</strong>: al menos
+            la mitad de la unión de géneros debe estar en la intersección.<br><br>
+            A mayor umbral, criterio más estricto → menor Precision y Recall.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const MODELS = [
+      {
+        key:     "clip-image",
+        name:    "CLIP — Solo imagen",
+        desc:    "openai/clip-vit-base-patch32 · índice de imagen",
+        icon:    "🖼",
+        badge:   "CLIP",
+        cls:     "badge-clip",
+        endpoint:"/metrics",
+      },
+      {
+        key:     "clip-combined",
+        name:    "CLIP — Imagen + Texto",
+        desc:    "openai/clip-vit-base-patch32 · índice combinado (img+text)/2",
+        icon:    "🔀",
+        badge:   "CLIP combinado",
+        cls:     "badge-combined",
+        endpoint:"/metrics/combined",
+      },
+      {
+        key:     "notextimg",
+        name:    "CLIP — Solo imagen (sin textimg)",
+        desc:    "openai/clip-vit-base-patch32 · índice imagen excluye embeddings de texto",
+        icon:    "🖼",
+        badge:   "CLIP notextimg",
+        cls:     "badge-clip",
+        endpoint:"/metrics/notextimg",
+      },
+      {
+        key:     "notextimg-combined",
+        name:    "CLIP — Imagen + Texto (sin textimg)",
+        desc:    "openai/clip-vit-base-patch32 · índice combinado sin textimg",
+        icon:    "🔀",
+        badge:   "CLIP notextimg comb.",
+        cls:     "badge-combined",
+        endpoint:"/metrics/notextimg/combined",
+      },
+      {
+        key:     "siglip",
+        name:    "SigLIP",
+        desc:    "google/siglip-base-patch16-224 · 768 dims",
+        icon:    "🔬",
+        badge:   "SigLIP",
+        cls:     "badge-siglip",
+        endpoint:"/metrics/siglip",
+      },
+      {
+        key:     "dinov2",
+        name:    "DINOv2",
+        desc:    "facebook/dinov2-large · 1024 dims",
+        icon:    "🦕",
+        badge:   "DINOv2",
+        cls:     "badge-dinov2",
+        endpoint:"/metrics/dinov2",
+      },
+    ];
+
+    const METRIC_LABELS = {
+      precision:        { label: "Precision@K",        bar: "bar-precision" },
+      ndcg:             { label: "NDCG@K",              bar: "bar-ndcg"      },
+      gender_coherence: { label: "Coherencia de género",bar: "bar-coherence" },
+      recall:           { label: "Recall@K",            bar: null            },
+    };
+
+    function buildBar(value, cls) {
+      const pct = Math.round(value * 100);
+      return `
+        <div class="bar-wrap">
+          <div class="bar-track">
+            <div class="bar-fill ${cls}" style="width:${pct}%"></div>
+          </div>
+          <span class="bar-value">${value.toFixed(4)}</span>
+        </div>`;
+    }
+
+    function buildCard(model, data) {
+      const rows = Object.entries(METRIC_LABELS).map(([key, meta]) => {
+        const val = data[key];
+        if (meta.bar) {
+          return `<tr><td class="bar-cell" colspan="2">
+            <div class="bar-wrap">
+              <span class="bar-label">${meta.label}</span>
+              <div class="bar-track">
+                <div class="bar-fill ${meta.bar}" style="width:${Math.round(val*100)}%"></div>
+              </div>
+              <span class="bar-value">${val.toFixed(4)}</span>
+            </div>
+          </td></tr>`;
+        }
+        return `<tr><td>${meta.label}</td><td>${val.toFixed(4)}</td></tr>`;
+      }).join("");
+
+      const aciertos = `<tr>
+        <td>Aciertos</td>
+        <td>${data.aciertos} <span style="color:var(--text-dim);font-weight:400">(${(data.aciertos_pct*100).toFixed(1)}%)</span></td>
+      </tr>`;
+
+      return `
+        <div class="model-card">
+          <div class="model-card-header">
+            <span class="model-icon">${model.icon}</span>
+            <div>
+              <div class="model-name">${model.name}</div>
+              <div class="model-desc">${model.desc}</div>
+            </div>
+            <span class="model-badge ${model.cls}">${model.badge}</span>
+          </div>
+          <table class="metrics-table">
+            ${rows}
+            ${aciertos}
+          </table>
+        </div>`;
+    }
+
+    async function loadAll() {
+      const grid = document.getElementById("models-grid");
+      grid.innerHTML = "";
+
+      const results = await Promise.all(
+        MODELS.map(m =>
+          fetch(m.endpoint)
+            .then(r => r.ok ? r.json() : null)
+            .catch(() => null)
+        )
+      );
+
+      const loaded = [];
+      results.forEach((data, i) => {
+        if (!data) return;
+        loaded.push({ model: MODELS[i], data });
+        grid.insertAdjacentHTML("beforeend", buildCard(MODELS[i], data));
+      });
+
+      if (loaded.length === 0) {
+        grid.innerHTML = '<div class="status-row">No hay métricas disponibles. Ejecutá <code>src/metrics/metric_service.py</code> para generarlas.</div>';
+        return;
+      }
+
+      // Summary
+      const bestPrec     = Math.max(...loaded.map(x => x.data.precision));
+      const bestNdcg     = Math.max(...loaded.map(x => x.data.ndcg));
+      const bestCoherence= Math.max(...loaded.map(x => x.data.gender_coherence));
+
+      document.getElementById("best-precision").textContent  = bestPrec.toFixed(4);
+      document.getElementById("best-ndcg").textContent       = bestNdcg.toFixed(4);
+      document.getElementById("best-coherence").textContent  = bestCoherence.toFixed(4);
+      document.getElementById("model-count").textContent     = loaded.length;
+      document.getElementById("summary").style.display       = "flex";
+    }
+
+    window.addEventListener("scroll", () => {
+      document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
+    }, { passive: true });
+
+    loadAll();
+  </script>
+</body>
+</html>

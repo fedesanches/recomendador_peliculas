@@ -131,21 +131,22 @@ _METRICS_SIGLIP_COMBINED_PATH   = Path("data/metrics/metrics_siglip_combined.jso
 _METRICS_DINOV2_PATH            = Path("data/metrics/metrics_dinov2.json")
 
 def _load_metrics(combined: bool = False, path: Path | None = None) -> MetricResult | None:
-    if path is None:
-        if RECOMMENDER_MODE == "api":
-            endpoint = f"{RECOMMENDER_API_URL}/metrics{'/combined' if combined else ''}"
-            try:
-                response = http_requests.get(endpoint, timeout=10)
-                response.raise_for_status()
-                return MetricResult(**response.json())
-            except Exception as e:
-                logger.error(f"Error al obtener métricas desde API: {e}")
-                return None
-        path = _METRICS_COMBINED_PATH if combined else _METRICS_PATH
+    # Resolver path local primero
+    local = path or (_METRICS_COMBINED_PATH if combined else _METRICS_PATH)
+    if local.exists():
+        return MetricResult(**json.loads(local.read_text()))
+    # Fallback: API (solo si el archivo local no existe)
+    if RECOMMENDER_MODE == "api" and path is None:
+        endpoint = f"{RECOMMENDER_API_URL}/metrics{'/combined' if combined else ''}"
+        try:
+            response = http_requests.get(endpoint, timeout=10)
+            response.raise_for_status()
+            return MetricResult(**response.json())
+        except Exception as e:
+            logger.error(f"Error al obtener métricas desde API: {e}")
+    return None
 
-    if not path.exists():
-        return None
-    return MetricResult(**json.loads(path.read_text()))
+
 
 metrics                    = _load_metrics(combined=False)
 metrics_combined           = _load_metrics(combined=True)
