@@ -521,7 +521,7 @@ function setupPosterSearch() {
 async function init() {
   $("loading-screen").style.display = "flex";
 
-  await _sleep(5000); // ← duración mínima del spinner, independiente del mock
+  await _sleep(500); // ← duración mínima del spinner, independiente del mock
 
   const [{ movies }, { history }] = await Promise.all([
     API.getMovies(),
