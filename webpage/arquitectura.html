@@ -7,21 +7,21 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --red:      #e50914;
-    --red-dim:  rgba(229,9,20,.18);
-    --red-glow: rgba(229,9,20,.35);
-    --bg:       #0a0a0a;
-    --bg2:      #111;
-    --bg3:      #181818;
-    --border:   rgba(255,255,255,.08);
-    --border2:  rgba(255,255,255,.14);
-    --text:     #e5e5e5;
-    --dim:      #777;
-    --green:    #46d369;
-    --blue:     #4a9eff;
-    --orange:   #f5a623;
-    --purple:   #a855f7;
-    --teal:     #2dd4bf;
+    --red:      #dc2626;
+    --red-dim:  rgba(220,38,38,.12);
+    --red-glow: rgba(220,38,38,.35);
+    --bg:       #f1f5f9;
+    --bg2:      #e2e8f0;
+    --bg3:      #ffffff;
+    --border:   rgba(15,23,42,.10);
+    --border2:  rgba(15,23,42,.22);
+    --text:     #0f172a;
+    --dim:      #475569;
+    --green:    #16a34a;
+    --blue:     #1d4ed8;
+    --orange:   #b45309;
+    --purple:   #6d28d9;
+    --teal:     #0f766e;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -81,39 +81,39 @@
     padding: 14px 18px; position: relative;
     transition: border-color .2s, box-shadow .2s; cursor: default;
   }
-  .node:hover { border-color: var(--border2); box-shadow: 0 0 24px rgba(255,255,255,.04); }
+  .node:hover { border-color: var(--border2); box-shadow: 0 4px 16px rgba(15,23,42,.12); }
   .node-icon { font-size: 1.3rem; margin-bottom: 6px; }
   .node-title { font-family: 'Syne', sans-serif; font-size: .82rem; font-weight: 700; margin-bottom: 3px; white-space: nowrap; }
   .node-subtitle { font-size: .66rem; color: var(--dim); line-height: 1.5; }
   .node-tag { display: inline-block; font-size: .58rem; letter-spacing: .07em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; margin-top: 6px; font-weight: 600; }
   .node-mode { position: absolute; top: -9px; right: 10px; font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
 
-  .node-front  { border-color: rgba(74,158,255,.25); }
-  .node-front:hover  { border-color: rgba(74,158,255,.5); box-shadow: 0 0 20px rgba(74,158,255,.08); }
-  .node-front .node-tag { background: rgba(74,158,255,.12); color: var(--blue); }
+  .node-front  { border-color: rgba(29,78,216,.30); }
+  .node-front:hover  { border-color: rgba(29,78,216,.6); box-shadow: 0 4px 16px rgba(29,78,216,.12); }
+  .node-front .node-tag { background: rgba(29,78,216,.10); color: var(--blue); }
 
   .node-api    { border-color: var(--red-glow); }
-  .node-api:hover    { border-color: var(--red); box-shadow: 0 0 20px var(--red-dim); }
+  .node-api:hover    { border-color: var(--red); box-shadow: 0 4px 16px var(--red-dim); }
   .node-api .node-tag { background: var(--red-dim); color: var(--red); }
 
-  .node-ml     { border-color: rgba(168,85,247,.25); }
-  .node-ml:hover     { border-color: rgba(168,85,247,.5); box-shadow: 0 0 20px rgba(168,85,247,.08); }
-  .node-ml .node-tag { background: rgba(168,85,247,.12); color: var(--purple); }
+  .node-ml     { border-color: rgba(109,40,217,.30); }
+  .node-ml:hover     { border-color: rgba(109,40,217,.6); box-shadow: 0 4px 16px rgba(109,40,217,.12); }
+  .node-ml .node-tag { background: rgba(109,40,217,.10); color: var(--purple); }
 
-  .node-index  { border-color: rgba(245,166,35,.22); }
-  .node-index:hover  { border-color: rgba(245,166,35,.5); box-shadow: 0 0 20px rgba(245,166,35,.08); }
-  .node-index .node-tag { background: rgba(245,166,35,.12); color: var(--orange); }
+  .node-index  { border-color: rgba(180,83,9,.28); }
+  .node-index:hover  { border-color: rgba(180,83,9,.6); box-shadow: 0 4px 16px rgba(180,83,9,.10); }
+  .node-index .node-tag { background: rgba(180,83,9,.10); color: var(--orange); }
 
-  .node-index-opt { border-color: rgba(45,212,191,.2); border-style: dashed; }
-  .node-index-opt:hover { border-color: rgba(45,212,191,.45); }
-  .node-index-opt .node-tag { background: rgba(45,212,191,.1); color: var(--teal); }
+  .node-index-opt { border-color: rgba(15,118,110,.25); border-style: dashed; }
+  .node-index-opt:hover { border-color: rgba(15,118,110,.55); }
+  .node-index-opt .node-tag { background: rgba(15,118,110,.10); color: var(--teal); }
 
-  .node-store  { border-color: rgba(70,211,105,.2); }
-  .node-store:hover  { border-color: rgba(70,211,105,.45); box-shadow: 0 0 20px rgba(70,211,105,.07); }
-  .node-store .node-tag { background: rgba(70,211,105,.1); color: var(--green); }
+  .node-store  { border-color: rgba(22,163,74,.28); }
+  .node-store:hover  { border-color: rgba(22,163,74,.55); box-shadow: 0 4px 16px rgba(22,163,74,.10); }
+  .node-store .node-tag { background: rgba(22,163,74,.10); color: var(--green); }
 
   .node-ext    { border-color: var(--border); background: var(--bg2); }
-  .node-ext .node-tag { background: rgba(255,255,255,.06); color: var(--dim); }
+  .node-ext .node-tag { background: rgba(15,23,42,.06); color: var(--dim); }
 
   /* ── API central ── */
   .node-api-central { width: 100%; max-width: 760px; text-align: center; }
@@ -121,36 +121,36 @@
   .api-endpoint-groups { display: flex; gap: 16px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
   .endpoint-group { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
   .endpoint-group-label { font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
-  .endpoint { font-size: .6rem; padding: 3px 8px; border-radius: 3px; border: 1px solid rgba(229,9,20,.2); color: var(--dim); white-space: nowrap; }
+  .endpoint { font-size: .6rem; padding: 3px 8px; border-radius: 3px; border: 1px solid rgba(220,38,38,.25); color: var(--dim); white-space: nowrap; }
   .endpoint span { color: var(--red); font-weight: 700; }
   .routes-note { font-size: .62rem; color: var(--dim); margin-top: 10px; }
   .routes-note strong { color: var(--text); }
 
   /* ── ML block ── */
   .ml-block {
-    background: var(--bg3); border: 1px solid rgba(168,85,247,.2);
+    background: var(--bg3); border: 1px solid rgba(109,40,217,.25);
     border-radius: 12px; padding: 20px 24px;
     width: 100%; max-width: 960px;
   }
-  .ml-block-label { font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--purple); margin-bottom: 16px; opacity: .7; }
+  .ml-block-label { font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--purple); margin-bottom: 16px; opacity: .9; }
   .ml-encoder-groups { display: flex; gap: 16px; flex-wrap: wrap; }
-  .ml-encoder-group { display: flex; align-items: flex-start; gap: 10px; background: rgba(0,0,0,.2); border-radius: 8px; padding: 12px; flex: 1; min-width: 260px; }
+  .ml-encoder-group { display: flex; align-items: flex-start; gap: 10px; background: rgba(15,23,42,.04); border-radius: 8px; padding: 12px; flex: 1; min-width: 260px; }
   .ml-arrow { display: flex; align-items: center; color: var(--dim); font-size: .9rem; padding-top: 20px; flex-shrink: 0; }
   .ml-indices { display: flex; flex-direction: column; gap: 6px; flex: 1; }
 
   .opt-badge {
     font-size: .55rem; letter-spacing: .07em; text-transform: uppercase;
     padding: 1px 6px; border-radius: 3px; font-weight: 700;
-    background: rgba(45,212,191,.1); color: var(--teal); margin-left: 6px;
+    background: rgba(15,118,110,.12); color: var(--teal); margin-left: 6px;
     vertical-align: middle;
   }
 
   /* ── index mini node ── */
   .idx-node {
-    background: rgba(245,166,35,.06); border: 1px solid rgba(245,166,35,.2);
+    background: rgba(180,83,9,.07); border: 1px solid rgba(180,83,9,.25);
     border-radius: 6px; padding: 7px 10px; font-size: .65rem;
   }
-  .idx-node.opt { border-color: rgba(45,212,191,.2); background: rgba(45,212,191,.04); border-style: dashed; }
+  .idx-node.opt { border-color: rgba(15,118,110,.25); background: rgba(15,118,110,.07); border-style: dashed; }
   .idx-node strong { color: var(--orange); display: block; margin-bottom: 2px; }
   .idx-node.opt strong { color: var(--teal); }
   .idx-node span { color: var(--dim); }
@@ -160,7 +160,7 @@
 
   /* ── Offline pipeline ── */
   .pipeline {
-    background: var(--bg2); border: 1px dashed rgba(255,255,255,.1);
+    background: var(--bg2); border: 1px dashed rgba(15,23,42,.18);
     border-radius: 10px; padding: 16px 20px;
     width: 100%; max-width: 900px; margin-top: 8px;
   }
@@ -168,11 +168,11 @@
     font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
     color: var(--dim); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
   }
-  .pipeline-label::after { content: 'ejecutado una sola vez'; font-size: .6rem; letter-spacing: 0; text-transform: none; color: rgba(255,255,255,.2); font-style: italic; }
+  .pipeline-label::after { content: 'ejecutado una sola vez'; font-size: .6rem; letter-spacing: 0; text-transform: none; color: rgba(15,23,42,.35); font-style: italic; }
   .pipeline-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 4px; }
-  .pipe-step { font-size: .68rem; padding: 5px 12px; border-radius: 4px; background: rgba(255,255,255,.04); border: 1px solid var(--border); white-space: nowrap; color: var(--dim); }
+  .pipe-step { font-size: .68rem; padding: 5px 12px; border-radius: 4px; background: rgba(15,23,42,.05); border: 1px solid var(--border); white-space: nowrap; color: var(--dim); }
   .pipe-step strong { color: var(--text); }
-  .pipe-arrow { color: rgba(255,255,255,.2); font-size: .8rem; flex-shrink: 0; }
+  .pipe-arrow { color: rgba(15,23,42,.30); font-size: .8rem; flex-shrink: 0; }
 
   /* ── Legend ── */
   .legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
@@ -203,15 +203,15 @@
   #arch-modal.open { opacity: 1; pointer-events: auto; }
 
   .arch-modal-panel {
-    background: #141414;
-    border: 1px solid rgba(255,255,255,.12);
+    background: #ffffff;
+    border: 1px solid rgba(15,23,42,.15);
     border-radius: 14px;
     width: 100%; max-width: 700px;
     max-height: 88vh;
     overflow-y: auto;
-    box-shadow: 0 16px 60px rgba(0,0,0,.9);
+    box-shadow: 0 16px 60px rgba(15,23,42,.20);
     animation: popIn .22s ease;
-    scrollbar-width: thin; scrollbar-color: #333 transparent;
+    scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;
   }
   @keyframes popIn {
     from { transform: scale(.95) translateY(12px); opacity: 0; }
@@ -221,8 +221,8 @@
   .arch-modal-header {
     display: flex; align-items: center; gap: 16px;
     padding: 24px 24px 18px;
-    border-bottom: 1px solid rgba(255,255,255,.07);
-    position: sticky; top: 0; background: #141414; z-index: 1;
+    border-bottom: 1px solid rgba(15,23,42,.10);
+    position: sticky; top: 0; background: #ffffff; z-index: 1;
   }
   .arch-modal-icon { font-size: 2.2rem; flex-shrink: 0; }
   .arch-modal-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; }
@@ -232,13 +232,13 @@
     display: inline-block;
   }
   .arch-modal-close {
-    margin-left: auto; background: rgba(255,255,255,.08);
+    margin-left: auto; background: rgba(15,23,42,.06);
     border: none; color: var(--text); width: 32px; height: 32px;
     border-radius: 50%; cursor: pointer; font-size: 1rem;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; transition: background .2s;
   }
-  .arch-modal-close:hover { background: rgba(255,255,255,.18); }
+  .arch-modal-close:hover { background: rgba(15,23,42,.14); }
 
   .arch-modal-body { padding: 20px 24px 28px; }
 
@@ -252,38 +252,38 @@
 
   .arch-desc { font-size: .82rem; color: var(--dim); line-height: 1.7; }
   .arch-desc strong { color: var(--text); }
-  .arch-desc code { background: rgba(255,255,255,.07); padding: 1px 6px; border-radius: 3px; font-size: .78rem; color: #aaa; }
+  .arch-desc code { background: rgba(15,23,42,.07); padding: 1px 6px; border-radius: 3px; font-size: .78rem; color: #475569; }
 
   .arch-pills { display: flex; flex-wrap: wrap; gap: 7px; }
   .arch-pill {
     font-size: .68rem; padding: 4px 12px; border-radius: 4px;
-    border: 1px solid rgba(255,255,255,.1);
-    color: var(--dim); background: rgba(255,255,255,.04);
+    border: 1px solid rgba(15,23,42,.12);
+    color: var(--dim); background: rgba(15,23,42,.04);
   }
   .arch-pill strong { color: var(--text); font-weight: 600; }
-  .arch-pill.red   { border-color: rgba(229,9,20,.3);   background: rgba(229,9,20,.07);   color: #f87171; }
-  .arch-pill.blue  { border-color: rgba(74,158,255,.3); background: rgba(74,158,255,.07); color: #7cb9ff; }
-  .arch-pill.green { border-color: rgba(70,211,105,.3); background: rgba(70,211,105,.07); color: #6ee7a0; }
-  .arch-pill.teal  { border-color: rgba(45,212,191,.3); background: rgba(45,212,191,.07); color: #5eead4; }
-  .arch-pill.orange{ border-color: rgba(245,166,35,.3); background: rgba(245,166,35,.07); color: #fbbf60; }
+  .arch-pill.red   { border-color: rgba(220,38,38,.30);  background: rgba(220,38,38,.07);  color: #b91c1c; }
+  .arch-pill.blue  { border-color: rgba(29,78,216,.30);  background: rgba(29,78,216,.07);  color: #1d4ed8; }
+  .arch-pill.green { border-color: rgba(22,163,74,.30);  background: rgba(22,163,74,.07);  color: #15803d; }
+  .arch-pill.teal  { border-color: rgba(15,118,110,.30); background: rgba(15,118,110,.07); color: #0f766e; }
+  .arch-pill.orange{ border-color: rgba(180,83,9,.30);   background: rgba(180,83,9,.07);   color: #b45309; }
 
   .arch-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
-  .arch-table tr { border-bottom: 1px solid rgba(255,255,255,.05); }
+  .arch-table tr { border-bottom: 1px solid rgba(15,23,42,.07); }
   .arch-table tr:last-child { border-bottom: none; }
   .arch-table td { padding: 8px 12px; }
   .arch-table td:first-child { color: var(--dim); white-space: nowrap; }
   .arch-table td:last-child { color: var(--text); }
-  .arch-table .method-get  { color: #46d369; font-weight: 700; margin-right: 6px; }
-  .arch-table .method-post { color: #f5a623; font-weight: 700; margin-right: 6px; }
+  .arch-table .method-get  { color: #16a34a; font-weight: 700; margin-right: 6px; }
+  .arch-table .method-post { color: #b45309; font-weight: 700; margin-right: 6px; }
 
   .arch-file-list { display: flex; flex-direction: column; gap: 6px; }
   .arch-file {
     display: flex; align-items: baseline; gap: 10px;
     font-size: .75rem; padding: 7px 12px;
-    background: rgba(255,255,255,.03); border-radius: 5px;
+    background: rgba(15,23,42,.03); border-radius: 5px;
     border: 1px solid var(--border);
   }
-  .arch-file code { color: #aaa; flex-shrink: 0; }
+  .arch-file code { color: #64748b; flex-shrink: 0; }
   .arch-file span { color: var(--dim); font-size: .7rem; }
 </style>
 </head>
@@ -303,7 +303,7 @@
     <div class="layer-row">
 
       <div class="node node-front" style="min-width:220px" data-node="gradio">
-        <div class="node-mode" style="background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.2)">Python</div>
+        <div class="node-mode" style="background:rgba(29,78,216,.10);color:var(--blue);border:1px solid rgba(29,78,216,.22)">Python</div>
         <div class="node-icon">🎞</div>
         <div class="node-title">Gradio App</div>
         <div class="node-subtitle">
@@ -315,7 +315,7 @@
       </div>
 
       <div class="node node-front" style="min-width:220px" data-node="visionflix">
-        <div class="node-mode" style="background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.2)">JS</div>
+        <div class="node-mode" style="background:rgba(29,78,216,.10);color:var(--blue);border:1px solid rgba(29,78,216,.22)">JS</div>
         <div class="node-icon">🎬</div>
         <div class="node-title">VisionFlix Web</div>
         <div class="node-subtitle">
@@ -400,29 +400,29 @@
         </div>
 
         <!-- SigLIP group (optional) -->
-        <div class="ml-encoder-group" style="border:1px dashed rgba(45,212,191,.2);background:rgba(45,212,191,.03)">
-          <div class="node node-ml" style="min-width:130px;flex-shrink:0;border-color:rgba(45,212,191,.3)" data-node="siglip">
+        <div class="ml-encoder-group" style="border:1px dashed rgba(15,118,110,.25);background:rgba(15,118,110,.05)">
+          <div class="node node-ml" style="min-width:130px;flex-shrink:0;border-color:rgba(15,118,110,.35)" data-node="siglip">
             <div class="node-icon">🔬</div>
             <div class="node-title">SigLIPEncoder <span class="opt-badge">opt</span></div>
             <div class="node-subtitle">
               siglip-base-patch16<br>
               768 dims
             </div>
-            <div class="node-tag" style="background:rgba(45,212,191,.1);color:var(--teal)">HF Transformers</div>
+            <div class="node-tag" style="background:rgba(15,118,110,.10);color:var(--teal)">HF Transformers</div>
           </div>
           <div class="ml-arrow">→</div>
         </div>
 
         <!-- DINOv2 group (optional) -->
-        <div class="ml-encoder-group" style="border:1px dashed rgba(45,212,191,.2);background:rgba(45,212,191,.03)">
-          <div class="node node-ml" style="min-width:130px;flex-shrink:0;border-color:rgba(45,212,191,.3)" data-node="dinov2">
+        <div class="ml-encoder-group" style="border:1px dashed rgba(15,118,110,.25);background:rgba(15,118,110,.05)">
+          <div class="node node-ml" style="min-width:130px;flex-shrink:0;border-color:rgba(15,118,110,.35)" data-node="dinov2">
             <div class="node-icon">🦕</div>
             <div class="node-title">DINOv2Encoder <span class="opt-badge">opt</span></div>
             <div class="node-subtitle">
               dinov2-large<br>
               1024 dims
             </div>
-            <div class="node-tag" style="background:rgba(45,212,191,.1);color:var(--teal)">HF Transformers</div>
+            <div class="node-tag" style="background:rgba(15,118,110,.10);color:var(--teal)">HF Transformers</div>
           </div>
           <div class="ml-arrow">→</div>
         </div>
@@ -539,7 +539,7 @@
 const NODES = {
   gradio: {
     icon: '🎞', title: 'Gradio App', badge: 'Python · Gradio Blocks',
-    badgeStyle: 'background:rgba(74,158,255,.12);color:#4a9eff',
+    badgeStyle: 'background:rgba(29,78,216,.12);color:#1d4ed8',
     sections: [
       { title: 'Ubicación', html: `
         <div class="arch-desc">
@@ -568,7 +568,7 @@ const NODES = {
 
   visionflix: {
     icon: '🎬', title: 'VisionFlix Web', badge: 'Vanilla JS · HTML/CSS',
-    badgeStyle: 'background:rgba(74,158,255,.12);color:#4a9eff',
+    badgeStyle: 'background:rgba(29,78,216,.12);color:#1d4ed8',
     sections: [
       { title: 'Páginas', html: `
         <table class="arch-table">
@@ -596,7 +596,7 @@ const NODES = {
 
   fastapi: {
     icon: '⚡', title: 'FastAPI — api.py', badge: 'uvicorn · puerto 7860',
-    badgeStyle: 'background:rgba(229,9,20,.12);color:#e50914',
+    badgeStyle: 'background:rgba(220,38,38,.12);color:#dc2626',
     sections: [
       { title: 'Endpoints de recomendación', html: `
         <table class="arch-table">
@@ -633,7 +633,7 @@ const NODES = {
 
   clip: {
     icon: '🧠', title: 'CLIPEncoder', badge: 'openai/clip-vit-base-patch32',
-    badgeStyle: 'background:rgba(168,85,247,.12);color:#a855f7',
+    badgeStyle: 'background:rgba(109,40,217,.12);color:#6d28d9',
     sections: [
       { title: 'Modelo', html: `
         <div class="arch-desc">
@@ -659,7 +659,7 @@ const NODES = {
 
   siglip: {
     icon: '🔬', title: 'SigLIPEncoder', badge: 'opcional · google/siglip-base-patch16-224',
-    badgeStyle: 'background:rgba(45,212,191,.1);color:#2dd4bf',
+    badgeStyle: 'background:rgba(15,118,110,.12);color:#0f766e',
     sections: [
       { title: 'Modelo', html: `
         <div class="arch-desc">
@@ -683,7 +683,7 @@ const NODES = {
 
   dinov2: {
     icon: '🦕', title: 'DINOv2Encoder', badge: 'opcional · facebook/dinov2-large',
-    badgeStyle: 'background:rgba(45,212,191,.1);color:#2dd4bf',
+    badgeStyle: 'background:rgba(15,118,110,.12);color:#0f766e',
     sections: [
       { title: 'Modelo', html: `
         <div class="arch-desc">
@@ -709,7 +709,7 @@ const NODES = {
 
   processed: {
     icon: '💾', title: 'data/processed/', badge: 'Índices FAISS · Local FS',
-    badgeStyle: 'background:rgba(70,211,105,.1);color:#46d369',
+    badgeStyle: 'background:rgba(22,163,74,.12);color:#16a34a',
     sections: [
       { title: 'Índices FAISS', html: `
         <div class="arch-file-list">
@@ -737,7 +737,7 @@ const NODES = {
 
   metrics: {
     icon: '📊', title: 'data/metrics/', badge: 'Métricas JSON · Local FS',
-    badgeStyle: 'background:rgba(70,211,105,.1);color:#46d369',
+    badgeStyle: 'background:rgba(22,163,74,.12);color:#16a34a',
     sections: [
       { title: 'Archivos', html: `
         <div class="arch-file-list">
@@ -772,7 +772,7 @@ const NODES = {
 
   hfhub: {
     icon: '🤗', title: 'HuggingFace Hub', badge: 'HfFileSystem · Bucket privado',
-    badgeStyle: 'background:rgba(70,211,105,.1);color:#46d369',
+    badgeStyle: 'background:rgba(22,163,74,.12);color:#16a34a',
     sections: [
       { title: 'Bucket', html: `
         <div class="arch-desc">
@@ -797,7 +797,7 @@ const NODES = {
 
   tmdb: {
     icon: '🎥', title: 'TMDB API', badge: 'The Movie Database · Externo',
-    badgeStyle: 'background:rgba(255,255,255,.06);color:#777',
+    badgeStyle: 'background:rgba(15,23,42,.07);color:#475569',
     sections: [
       { title: 'Uso en pipeline offline', html: `
         <div class="arch-desc">
