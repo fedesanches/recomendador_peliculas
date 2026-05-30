@@ -213,14 +213,23 @@ def recommend_by_text(query: str, top_k: int = 5, combined: bool = False, model:
     return _to_response(results)
 
 
+def _nan_to_none(val):
+    """Convierte NaN de pandas a None (Pydantic no acepta NaN como str|None)."""
+    import math
+    try:
+        return None if math.isnan(float(val)) else val
+    except (TypeError, ValueError):
+        return val
+
+
 def _to_movie_list(df) -> List[Movie]:
     return [
         Movie(
-            title=           row.get("title", ""),
-            overview=        row.get("overview"),
-            genres=          row.get("genres"),
+            title=           row.get("title", "") or "",
+            overview=        _nan_to_none(row.get("overview")),
+            genres=          _nan_to_none(row.get("genres")),
             score=           float(row["score"]),
-            tmdb_poster_url= row.get("tmdb_poster_url"),
+            tmdb_poster_url= _nan_to_none(row.get("tmdb_poster_url")),
         )
         for _, row in df.iterrows()
     ]
